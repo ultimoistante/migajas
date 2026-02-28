@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* TipTap editor styles */
+.tiptap {
+    @apply outline-none min-h-[200px] px-1;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+    @apply text-base-content/40 pointer-events-none float-left h-0;
+    content: attr(data-placeholder);
+}
+
+/* Task list (checkboxes) */
+.tiptap ul[data-type="taskList"] {
+    @apply list-none pl-0;
+}
+
+.tiptap ul[data-type="taskList"] li {
+    @apply flex items-start gap-2 my-1;
+}
+
+.tiptap ul[data-type="taskList"] li>label {
+    @apply flex items-center mt-0.5;
+}
+
+.tiptap ul[data-type="taskList"] li>label input[type="checkbox"] {
+    @apply checkbox checkbox-primary checkbox-sm;
+}
+
+.tiptap ul[data-type="taskList"] li>div {
+    @apply flex-1;
+}
+
+/* Nested task lists */
+.tiptap ul[data-type="taskList"] ul[data-type="taskList"] {
+    @apply pl-5 mt-1;
+}
+
+/* Headings */
+.tiptap h1 {
+    @apply text-2xl font-bold mt-4 mb-2;
+}
+
+.tiptap h2 {
+    @apply text-xl font-bold mt-3 mb-2;
+}
+
+.tiptap h3 {
+    @apply text-lg font-semibold mt-2 mb-1;
+}
+
+/* Code */
+.tiptap code {
+    @apply bg-base-300 rounded px-1 py-0.5 text-sm font-mono;
+}
+
+.tiptap pre {
+    @apply bg-base-300 rounded-lg p-4 overflow-x-auto my-2;
+}
+
+.tiptap pre code {
+    @apply bg-transparent p-0;
+}
+
+/* Blockquote */
+.tiptap blockquote {
+    @apply border-l-4 border-primary pl-4 italic my-2 text-base-content/70;
+}
+
+/* Lists */
+.tiptap ul:not([data-type="taskList"]) {
+    @apply list-disc pl-5 my-1;
+}
+
+.tiptap ol {
+    @apply list-decimal pl-5 my-1;
+}
+
+/* Links */
+.tiptap a {
+    @apply text-primary underline;
+}
+
+/* Horizontal rule */
+.tiptap hr {
+    @apply border-base-300 my-4;
+}

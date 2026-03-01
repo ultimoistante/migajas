@@ -18,11 +18,11 @@
 }
 
 .tiptap ul[data-type="taskList"] li {
-    @apply flex items-start gap-2 my-1;
+    @apply flex items-center gap-2 my-0;
 }
 
 .tiptap ul[data-type="taskList"] li>label {
-    @apply flex items-center mt-0.5;
+    @apply flex items-center;
 }
 
 .tiptap ul[data-type="taskList"] li>label input[type="checkbox"] {
@@ -36,6 +36,27 @@
 /* Nested task lists */
 .tiptap ul[data-type="taskList"] ul[data-type="taskList"] {
     @apply pl-5 mt-1;
+}
+
+/* Task list styles for read-only rendered HTML (note cards, modal preview) */
+ul[data-type="taskList"] {
+    @apply list-none pl-0 m-0;
+}
+
+ul[data-type="taskList"] li {
+    @apply flex items-center gap-2 my-0;
+}
+
+ul[data-type="taskList"] li>label {
+    @apply flex items-center;
+}
+
+ul[data-type="taskList"] li>label input[type="checkbox"] {
+    @apply checkbox checkbox-primary checkbox-xs;
+}
+
+ul[data-type="taskList"] li>div {
+    @apply flex-1;
 }
 
 /* Headings */

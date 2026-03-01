@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { notesStore } from "$lib/stores/notes";
+    import { tagsStore, selectedTagId } from "$lib/stores/tags";
     import { authStore, currentUser } from "$lib/stores/auth";
     import { theme } from "$lib/stores/theme";
     import { goto } from "$app/navigation";
@@ -24,7 +25,7 @@
 
     onMount(async () => {
         try {
-            await notesStore.load();
+            await Promise.all([notesStore.load(), tagsStore.load()]);
         } catch (e: unknown) {
             error = e instanceof Error ? e.message : "Failed to load notes";
         } finally {
@@ -66,15 +67,21 @@
 
     async function logout() {
         notesStore.reset();
+        tagsStore.reset();
+        selectedTagId.set(null);
         await authStore.logout();
         goto("/login");
     }
 
     $: filtered = $notesStore.filter((n) => {
+        if ($selectedTagId && !n.tags?.some((t) => t.id === $selectedTagId)) return false;
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return n.title.toLowerCase().includes(q) || (!n.is_locked && n.body?.toLowerCase().includes(q));
     });
+
+    // Note count per tag
+    $: noteCountByTag = Object.fromEntries($tagsStore.map((tag) => [tag.id, $notesStore.filter((n) => n.tags?.some((t) => t.id === tag.id)).length]));
 
     $: pinned = filtered.filter((n) => n.is_pinned);
     $: others = filtered.filter((n) => !n.is_pinned);
@@ -145,63 +152,84 @@
 </nav>
 
 <!-- Main content -->
-<main class="max-w-6xl mx-auto px-4 py-6">
-    {#if loading}
-        <div class="flex justify-center py-20">
-            <span class="loading loading-spinner loading-lg text-primary" />
-        </div>
-    {:else if error}
-        <div class="alert alert-error">{error}</div>
-    {:else}
-        <!-- Pinned -->
-        {#if pinned.length > 0}
-            <section class="mb-6">
-                <h2 class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2a1 1 0 0 1 1 1v1h4a1 1 0 0 1 .7 1.7l-2.7 2.7.3 4.6L18 14a1 1 0 0 1-1 1h-4v6a1 1 0 1 1-2 0v-6H7a1 1 0 0 1-1-1l2.7-1 .3-4.6L6.3 5.7A1 1 0 0 1 7 4h4V3a1 1 0 0 1 1-1z" />
-                    </svg>
-                    Pinned
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    {#each pinned as note (note.id)}
-                        <NoteCard {note} on:open={(e) => openEditModal(e.detail)} on:delete={(e) => handleDelete(e.detail)} on:togglePin={(e) => handleTogglePin(e.detail)} />
-                    {/each}
-                </div>
-            </section>
+<div class="flex">
+    <!-- Left sidebar: tag filter — always visible, sticky under navbar -->
+    <aside class="w-52 shrink-0 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto border-r border-base-300 bg-base-100 flex flex-col gap-0.5 p-3">
+        <button class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors" class:bg-primary={$selectedTagId === null} class:text-primary-content={$selectedTagId === null} class:hover:bg-base-200={$selectedTagId !== null} on:click={() => selectedTagId.set(null)} type="button">
+            <span>All notes</span>
+            <span class="badge badge-xs">{$notesStore.length}</span>
+        </button>
+        <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider px-2 mt-3 mb-1">Tags</p>
+        {#each $tagsStore as tag (tag.id)}
+            <button class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors" class:bg-primary={$selectedTagId === tag.id} class:text-primary-content={$selectedTagId === tag.id} class:hover:bg-base-200={$selectedTagId !== tag.id} on:click={() => selectedTagId.set($selectedTagId === tag.id ? null : tag.id)} type="button">
+                <span class="truncate">{tag.emoji ? tag.emoji + " " : ""}{tag.name}</span>
+                <span class="badge badge-xs shrink-0">{noteCountByTag[tag.id] ?? 0}</span>
+            </button>
+        {/each}
+        {#if $tagsStore.length === 0}
+            <p class="text-xs text-base-content/30 italic px-2 mt-1">No tags yet.<br />Create one in a note.</p>
         {/if}
+    </aside>
 
-        <!-- All notes -->
-        {#if others.length > 0}
-            <section>
-                {#if pinned.length > 0}
-                    <h2 class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-3">Other notes</h2>
-                {/if}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                    {#each others as note (note.id)}
-                        <NoteCard {note} on:open={(e) => openEditModal(e.detail)} on:delete={(e) => handleDelete(e.detail)} on:togglePin={(e) => handleTogglePin(e.detail)} />
-                    {/each}
-                </div>
-            </section>
-        {/if}
-
-        {#if filtered.length === 0}
-            <div class="flex flex-col items-center justify-center py-24 gap-4 text-base-content/50">
-                {#if searchQuery}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-                    </svg>
-                    <p class="text-lg">No notes match your search</p>
-                {:else}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    <p class="text-lg font-medium">No notes yet</p>
-                    <p class="text-sm">Create your first note to get started</p>
-                {/if}
+    <!-- Notes area -->
+    <main class="flex-1 min-w-0 px-6 py-6">
+        {#if loading}
+            <div class="flex justify-center py-20">
+                <span class="loading loading-spinner loading-lg text-primary" />
             </div>
+        {:else if error}
+            <div class="alert alert-error">{error}</div>
+        {:else}
+            <!-- Pinned -->
+            {#if pinned.length > 0}
+                <section class="mb-6">
+                    <h2 class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2a1 1 0 0 1 1 1v1h4a1 1 0 0 1 .7 1.7l-2.7 2.7.3 4.6L18 14a1 1 0 0 1-1 1h-4v6a1 1 0 1 1-2 0v-6H7a1 1 0 0 1-1-1l2.7-1 .3-4.6L6.3 5.7A1 1 0 0 1 7 4h4V3a1 1 0 0 1 1-1z" />
+                        </svg>
+                        Pinned
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {#each pinned as note (note.id)}
+                            <NoteCard {note} on:open={(e) => openEditModal(e.detail)} on:delete={(e) => handleDelete(e.detail)} on:togglePin={(e) => handleTogglePin(e.detail)} />
+                        {/each}
+                    </div>
+                </section>
+            {/if}
+
+            <!-- All notes -->
+            {#if others.length > 0}
+                <section>
+                    {#if pinned.length > 0}
+                        <h2 class="text-xs font-semibold text-base-content/50 uppercase tracking-wider mb-3">Other notes</h2>
+                    {/if}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {#each others as note (note.id)}
+                            <NoteCard {note} on:open={(e) => openEditModal(e.detail)} on:delete={(e) => handleDelete(e.detail)} on:togglePin={(e) => handleTogglePin(e.detail)} />
+                        {/each}
+                    </div>
+                </section>
+            {/if}
+
+            {#if filtered.length === 0}
+                <div class="flex flex-col items-center justify-center py-24 gap-4 text-base-content/50">
+                    {#if searchQuery || $selectedTagId}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                        </svg>
+                        <p class="text-lg">No notes match your filter</p>
+                    {:else}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        <p class="text-lg font-medium">No notes yet</p>
+                        <p class="text-sm">Create your first note to get started</p>
+                    {/if}
+                </div>
+            {/if}
         {/if}
-    {/if}
-</main>
+    </main>
+</div>
 
 <!-- FAB: New note -->
 <button class="btn btn-primary btn-circle btn-lg fixed bottom-8 right-8 shadow-xl z-30" on:click={openCreateModal} title="New note" type="button">

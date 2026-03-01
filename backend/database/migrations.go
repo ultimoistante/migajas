@@ -60,6 +60,24 @@ CREATE TABLE IF NOT EXISTS attachments (
 );
 CREATE INDEX IF NOT EXISTS idx_attachments_note ON attachments(note_id);
 CREATE INDEX IF NOT EXISTS idx_attachments_user ON attachments(user_id);
+
+CREATE TABLE IF NOT EXISTS tags (
+    id         TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    emoji      TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_user_name ON tags(user_id, name);
+CREATE INDEX IF NOT EXISTS idx_tags_user ON tags(user_id);
+
+CREATE TABLE IF NOT EXISTS note_tags (
+    note_id TEXT NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    tag_id  TEXT NOT NULL REFERENCES tags(id)  ON DELETE CASCADE,
+    PRIMARY KEY (note_id, tag_id)
+);
+CREATE INDEX IF NOT EXISTS idx_note_tags_note ON note_tags(note_id);
+CREATE INDEX IF NOT EXISTS idx_note_tags_tag  ON note_tags(tag_id);
 `
 
 func migrate(db *sqlx.DB) error {

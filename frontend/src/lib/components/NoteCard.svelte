@@ -30,8 +30,8 @@
 <div class="card border border-base-300 shadow-sm hover:shadow-md transition-shadow cursor-pointer group bg-base-100" style={topBorder} on:click={() => dispatch("open", note)} on:keydown={(e) => e.key === "Enter" && dispatch("open", note)} role="button" tabindex="0">
     <div class="card-body p-4 gap-2 min-h-[200px]">
         <!-- Header row -->
-        <div class="flex items-start justify-between gap-2">
-            <h3 class="font-semibold text-base leading-tight line-clamp-2 flex-1">
+        <div class="flex items-start justify-between gap-2 border-b border-base-300 pb-2">
+            <h3 class="font-semibold text-base leading-tight line-clamp-2 flex-1 text-primary">
                 {note.title || "Untitled"}
             </h3>
             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -59,37 +59,50 @@
                 </svg>
             </div>
         {:else if note.body}
-            <div class="prose prose-sm max-w-none overflow-hidden max-h-[90px] pointer-events-none text-base-content/80 flex-1">
+            <div class="prose prose-sm prose-headings:text-base-content prose-headings:font-semibold max-w-none overflow-hidden max-h-[90px] pointer-events-none text-base-content/80 flex-1">
                 {@html note.body}
             </div>
         {:else}
             <p class="text-sm text-base-content/40 italic flex-1">Empty note</p>
         {/if}
 
-        <!-- Footer badges -->
-        <div class="flex items-center gap-1.5 mt-auto flex-wrap">
-            {#if note.is_pinned}
-                <span class="badge badge-primary badge-xs">Pinned</span>
+        <!-- Footer -->
+        <div class="mt-auto flex flex-col gap-1">
+            <!-- Tags row -->
+            {#if (note.tags ?? []).length > 0}
+                <div class="flex flex-wrap gap-1">
+                    {#each note.tags ?? [] as tag (tag.id)}
+                        <span class="badge badge-xs badge-outline gap-0.5 max-w-[7rem] truncate">
+                            {#if tag.emoji}<span>{tag.emoji}</span>{/if}{tag.name}
+                        </span>
+                    {/each}
+                </div>
             {/if}
-            {#if note.is_secret}
-                <span class="badge badge-warning badge-xs gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                    Secret
+            <!-- Status badges + date row -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+                {#if note.is_pinned}
+                    <span class="badge badge-primary badge-xs">Pinned</span>
+                {/if}
+                {#if note.is_secret}
+                    <span class="badge badge-warning badge-xs gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Secret
+                    </span>
+                {/if}
+                {#if note.attachment_count > 0}
+                    <span class="badge badge-xs gap-1 bg-orange-500 text-white border-orange-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
+                        {note.attachment_count}
+                    </span>
+                {/if}
+                <span class="text-xs text-base-content/40 ml-auto">
+                    {fmtDate(note.updated_at)}
                 </span>
-            {/if}
-            {#if note.attachment_count > 0}
-                <span class="badge badge-xs gap-1 bg-orange-500 text-white border-orange-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
-                    {note.attachment_count}
-                </span>
-            {/if}
-            <span class="text-xs text-base-content/40 ml-auto">
-                {fmtDate(note.updated_at)}
-            </span>
+            </div>
         </div>
     </div>
 </div>

@@ -42,9 +42,34 @@ func (h *NotesHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Batch-fetch tags for all notes
+	type noteTagRow struct {
+		NoteID string `db:"note_id"`
+		ID     string `db:"id"`
+		Name   string `db:"name"`
+		Emoji  string `db:"emoji"`
+	}
+	tagMap := make(map[string][]models.TagPublic)
+	if len(notes) > 0 {
+		noteIDs := make([]string, len(notes))
+		for i, n := range notes {
+			noteIDs[i] = n.ID
+		}
+		q, args, _ := sqlx.In(
+			`SELECT nt.note_id, t.id, t.name, t.emoji FROM note_tags nt JOIN tags t ON t.id=nt.tag_id WHERE nt.note_id IN (?)`,
+			noteIDs,
+		)
+		q = h.db.Rebind(q)
+		var tagRows []noteTagRow
+		if err := h.db.Select(&tagRows, q, args...); err == nil {
+			for _, row := range tagRows {
+				tagMap[row.NoteID] = append(tagMap[row.NoteID], models.TagPublic{ID: row.ID, Name: row.Name, Emoji: row.Emoji})
+			}
+		}
+	}
 	result := make([]models.NoteResponse, len(notes))
 	for i, n := range notes {
-		result[i] = n.ToResponse(nil) // secret notes: body=nil
+		result[i] = n.ToResponse(nil, tagMap[n.ID]) // secret notes: body=nil
 	}
 	jsonResponse(w, http.StatusOK, result)
 }
@@ -65,17 +90,18 @@ func (h *NotesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse(w, http.StatusOK, note.ToResponse(nil))
+	jsonResponse(w, http.StatusOK, note.ToResponse(nil, h.getNoteTags(note.ID)))
 }
 
 // ── Create note ───────────────────────────────────────────────────────────────
 
 type createNoteRequest struct {
-	Title      string `json:"title"`
-	Body       string `json:"body"`
-	IsSecret   bool   `json:"is_secret"`
-	Credential string `json:"credential"` // required when is_secret=true
-	Color      string `json:"color"`
+	Title      string    `json:"title"`
+	Body       string    `json:"body"`
+	IsSecret   bool      `json:"is_secret"`
+	Credential string    `json:"credential"` // required when is_secret=true
+	Color      string    `json:"color"`
+	Tags       *[]string `json:"tags"` // optional list of tag IDs
 }
 
 func (h *NotesHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -127,19 +153,24 @@ func (h *NotesHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Tags != nil {
+		_ = h.setNoteTags(id, *req.Tags)
+	}
+
 	note, _ := h.getNote(id, userID)
-	jsonResponse(w, http.StatusCreated, note.ToResponse(nil))
+	jsonResponse(w, http.StatusCreated, note.ToResponse(nil, h.getNoteTags(id)))
 }
 
 // ── Update note ───────────────────────────────────────────────────────────────
 
 type updateNoteRequest struct {
-	Title      *string `json:"title"`
-	Body       *string `json:"body"`
-	IsSecret   *bool   `json:"is_secret"`
-	Credential string  `json:"credential"` // required when changing secret body or toggling is_secret
-	IsPinned   *bool   `json:"is_pinned"`
-	Color      *string `json:"color"`
+	Title      *string   `json:"title"`
+	Body       *string   `json:"body"`
+	IsSecret   *bool     `json:"is_secret"`
+	Credential string    `json:"credential"` // required when changing secret body or toggling is_secret
+	IsPinned   *bool     `json:"is_pinned"`
+	Color      *string   `json:"color"`
+	Tags       *[]string `json:"tags"` // optional list of tag IDs; nil means no change
 }
 
 func (h *NotesHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -248,8 +279,12 @@ func (h *NotesHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Tags != nil {
+		_ = h.setNoteTags(noteID, *req.Tags)
+	}
+
 	updated, _ := h.getNote(noteID, userID)
-	jsonResponse(w, http.StatusOK, updated.ToResponse(nil))
+	jsonResponse(w, http.StatusOK, updated.ToResponse(nil, h.getNoteTags(noteID)))
 }
 
 // ── Delete note ───────────────────────────────────────────────────────────────
@@ -310,7 +345,7 @@ func (h *NotesHandler) Unlock(w http.ResponseWriter, r *http.Request) {
 	if note.BodyNonce == nil {
 		// Note has no content yet - return empty body
 		empty := ""
-		jsonResponse(w, http.StatusOK, note.ToResponse(&empty))
+		jsonResponse(w, http.StatusOK, note.ToResponse(&empty, h.getNoteTags(note.ID)))
 		return
 	}
 
@@ -320,7 +355,7 @@ func (h *NotesHandler) Unlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse(w, http.StatusOK, note.ToResponse(&plaintext))
+	jsonResponse(w, http.StatusOK, note.ToResponse(&plaintext, h.getNoteTags(note.ID)))
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -336,6 +371,32 @@ func (h *NotesHandler) getNote(noteID, userID string) (*models.Note, error) {
 		 GROUP BY n.id`, noteID, userID,
 	)
 	return &note, err
+}
+
+// getNoteTags returns the tags associated with a note, never nil.
+func (h *NotesHandler) getNoteTags(noteID string) []models.TagPublic {
+	var tags []models.TagPublic
+	_ = h.db.Select(&tags,
+		`SELECT t.id, t.name, t.emoji FROM note_tags nt JOIN tags t ON t.id=nt.tag_id WHERE nt.note_id=? ORDER BY t.name`,
+		noteID,
+	)
+	if tags == nil {
+		tags = []models.TagPublic{}
+	}
+	return tags
+}
+
+// setNoteTags replaces all tag associations for the given note.
+func (h *NotesHandler) setNoteTags(noteID string, tagIDs []string) error {
+	if _, err := h.db.Exec(`DELETE FROM note_tags WHERE note_id=?`, noteID); err != nil {
+		return err
+	}
+	for _, tagID := range tagIDs {
+		if _, err := h.db.Exec(`INSERT OR IGNORE INTO note_tags (note_id, tag_id) VALUES (?,?)`, noteID, tagID); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // getUserVaultSaltAndVerify checks that the provided credential matches the stored

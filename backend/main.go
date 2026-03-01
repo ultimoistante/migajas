@@ -31,6 +31,7 @@ func main() {
 	setupHandler := handlers.NewSetupHandler(db, cfg)
 	attachmentsHandler := handlers.NewAttachmentsHandler(db, cfg.AttachmentsDir)
 	adminHandler := handlers.NewAdminHandler(db)
+	tagsHandler := handlers.NewTagsHandler(db)
 
 	r := chi.NewRouter()
 
@@ -97,6 +98,12 @@ func main() {
 		r.Get("/api/notes/{id}/attachments", attachmentsHandler.List)
 		r.Delete("/api/attachments/{id}", attachmentsHandler.Delete)
 		r.Get("/api/attachments/{id}/content", attachmentsHandler.Serve)
+
+		// Tags
+		r.Get("/api/tags", tagsHandler.List)
+		r.Post("/api/tags", tagsHandler.Create)
+		r.Put("/api/tags/{id}", tagsHandler.Update)
+		r.Delete("/api/tags/{id}", tagsHandler.Delete)
 
 		// Admin — user management (handler enforces is_admin check internally)
 		r.Get("/api/admin/users", adminHandler.ListUsers)

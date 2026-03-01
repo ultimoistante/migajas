@@ -87,3 +87,14 @@
 .tiptap hr {
     @apply border-base-300 my-4;
 }
+
+/* Badge overrides */
+.badge-xs {
+    height: 1rem;
+    font-size: 0.75rem;
+    line-height: .75rem;
+    padding-left: 0.313rem;
+    padding-right: 0.313rem;
+    padding-top: 0.313rem;
+    padding-bottom: 0.313rem;
+}

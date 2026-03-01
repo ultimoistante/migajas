@@ -18,20 +18,24 @@ type Note struct {
 
 // NoteResponse is returned to clients. Body is a pointer: nil when secret+locked.
 type NoteResponse struct {
-	ID              string    `json:"id"`
-	UserID          string    `json:"user_id"`
-	Title           string    `json:"title"`
-	Body            *string   `json:"body"` // nil when secret and not unlocked
-	IsSecret        bool      `json:"is_secret"`
-	IsLocked        bool      `json:"is_locked"` // true when secret and not yet unlocked in this request
-	IsPinned        bool      `json:"is_pinned"`
-	Color           string    `json:"color"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-	AttachmentCount int       `json:"attachment_count"`
+	ID              string      `json:"id"`
+	UserID          string      `json:"user_id"`
+	Title           string      `json:"title"`
+	Body            *string     `json:"body"` // nil when secret and not unlocked
+	IsSecret        bool        `json:"is_secret"`
+	IsLocked        bool        `json:"is_locked"` // true when secret and not yet unlocked in this request
+	IsPinned        bool        `json:"is_pinned"`
+	Color           string      `json:"color"`
+	Tags            []TagPublic `json:"tags"`
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       time.Time   `json:"updated_at"`
+	AttachmentCount int         `json:"attachment_count"`
 }
 
-func (n *Note) ToResponse(decryptedBody *string) NoteResponse {
+func (n *Note) ToResponse(decryptedBody *string, tags []TagPublic) NoteResponse {
+	if tags == nil {
+		tags = []TagPublic{}
+	}
 	resp := NoteResponse{
 		ID:              n.ID,
 		UserID:          n.UserID,
@@ -40,6 +44,7 @@ func (n *Note) ToResponse(decryptedBody *string) NoteResponse {
 		IsLocked:        n.IsSecret && decryptedBody == nil,
 		IsPinned:        n.IsPinned,
 		Color:           n.Color,
+		Tags:            tags,
 		CreatedAt:       n.CreatedAt,
 		UpdatedAt:       n.UpdatedAt,
 		AttachmentCount: n.AttachmentCount,

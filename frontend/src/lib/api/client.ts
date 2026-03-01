@@ -14,6 +14,12 @@ export interface SetupStatus {
     allow_self_registration: boolean;
 }
 
+export interface Tag {
+    id: string;
+    name: string;
+    emoji: string;
+}
+
 export interface Note {
     id: string;
     user_id: string;
@@ -23,6 +29,7 @@ export interface Note {
     is_locked: boolean;
     is_pinned: boolean;
     color: string;
+    tags: Tag[];
     created_at: string;
     updated_at: string;
     attachment_count: number;
@@ -131,6 +138,7 @@ export interface CreateNotePayload {
     is_secret: boolean;
     credential?: string;
     color?: string;
+    tags?: string[]; // tag IDs
 }
 
 export interface UpdateNotePayload {
@@ -140,6 +148,7 @@ export interface UpdateNotePayload {
     is_secret?: boolean;
     color?: string;
     credential?: string;
+    tags?: string[]; // tag IDs; omit to leave unchanged
 }
 
 export interface SetupPayload {
@@ -237,6 +246,20 @@ export const attachments = {
         const blob = await res.blob();
         return URL.createObjectURL(blob);
     }
+};
+
+// ── Tags ────────────────────────────────────────────────────────────────────────────────
+
+export const tags = {
+    list: () => request<Tag[]>('GET', '/tags'),
+
+    create: (name: string, emoji: string) =>
+        request<Tag>('POST', '/tags', { name, emoji }),
+
+    update: (id: string, payload: { name?: string; emoji?: string }) =>
+        request<Tag>('PUT', `/tags/${id}`, payload),
+
+    delete: (id: string) => request<{ message: string }>('DELETE', `/tags/${id}`)
 };
 
 // ── Admin ──────────────────────────────────────────────────────────────────────

@@ -2,8 +2,9 @@
     import { createEventDispatcher, onDestroy } from "svelte";
     import { notesStore } from "$lib/stores/notes";
     import { currentUser } from "$lib/stores/auth";
+    import { tagsStore } from "$lib/stores/tags";
     import RichEditor from "./RichEditor.svelte";
-    import { attachments as attachmentsApi, type Attachment, type Note } from "$lib/api/client";
+    import { attachments as attachmentsApi, type Attachment, type Note, type Tag } from "$lib/api/client";
 
     export let note: Note | null = null; // null = create mode
     export let open: boolean = false;
@@ -18,6 +19,47 @@
     let credential = "";
     let saving = false;
     let error = "";
+
+    // Tags
+    let noteTags: Tag[] = [];
+    let tagInput = "";
+    let showTagSuggestions = false;
+    let newTagEmoji = "";
+    let showEmojiPicker = false;
+
+    const EMOJIS = ["😀", "😂", "😍", "🤔", "😎", "😢", "😡", "🥳", "🤯", "🥺", "👍", "👎", "👋", "🙌", "🤝", "💪", "🫶", "❤️", "🔥", "⭐", "✅", "❌", "⚠️", "💡", "🔔", "📌", "📎", "🔗", "🏷️", "📋", "📝", "📖", "📚", "🗒️", "✏️", "🖊️", "📧", "💬", "🗨️", "📢", "🏠", "🏢", "🚀", "✈️", "🚗", "🌍", "🗺️", "📍", "⛺", "🏖️", "🍕", "🍔", "☕", "🍺", "🎂", "🍎", "🥗", "🍜", "🎉", "🎁", "💰", "💳", "📈", "📉", "🏦", "💼", "🛒", "🎯", "🏆", "🥇", "🔧", "⚙️", "🖥️", "📱", "🖨️", "🔋", "💾", "🖱️", "⌨️", "🔐", "🌱", "🌿", "🌸", "🌻", "🍀", "🌈", "☀️", "🌙", "❄️", "🌊", "🐶", "🐱", "🐭", "🐸", "🦊", "🐼", "🐨", "🦁", "🐯", "🦋"];
+
+    function pickEmoji(e: string) {
+        newTagEmoji = e;
+        showEmojiPicker = false;
+        showTagSuggestions = true;
+    }
+
+    $: tagSuggestions = $tagsStore.filter((t) => !noteTags.find((nt) => nt.id === t.id) && (tagInput === "" || t.name.toLowerCase().includes(tagInput.toLowerCase())));
+
+    function addTag(tag: Tag) {
+        if (!noteTags.find((t) => t.id === tag.id)) {
+            noteTags = [...noteTags, tag];
+        }
+        tagInput = "";
+        showTagSuggestions = false;
+    }
+
+    function removeTag(id: string) {
+        noteTags = noteTags.filter((t) => t.id !== id);
+    }
+
+    async function createAndAddTag() {
+        const name = tagInput.trim();
+        if (!name) return;
+        try {
+            const tag = await tagsStore.create(name, newTagEmoji.trim());
+            addTag(tag);
+            newTagEmoji = "";
+        } catch (e: unknown) {
+            error = e instanceof Error ? e.message : "Failed to create tag";
+        }
+    }
 
     // Attachments
     let noteAttachments: Attachment[] = [];
@@ -91,6 +133,7 @@
                 body = note.body ?? "";
                 isSecret = note.is_secret;
                 color = note.color;
+                noteTags = [...(note.tags ?? [])];
                 editMode = false; // always start in view mode for existing notes
                 currentNoteId = note.id;
                 // Load attachments for this note (revoke any old blob URLs first)
@@ -109,6 +152,7 @@
                 body = "";
                 isSecret = false;
                 color = "";
+                noteTags = [];
                 editMode = true; // create mode is always "edit"
                 currentNoteId = null;
                 noteAttachments = [];
@@ -129,7 +173,7 @@
         try {
             if (note) {
                 // Update existing note
-                const payload: Record<string, unknown> = { title, body, color };
+                const payload: Record<string, unknown> = { title, body, color, tags: noteTags.map((t) => t.id) };
                 if (secretStateChanged) {
                     if (!credential) {
                         error = "Enter your vault credential to change the secret state.";
@@ -154,6 +198,7 @@
                     body,
                     is_secret: isSecret,
                     color,
+                    tags: noteTags.map((t) => t.id),
                     ...(isSecret ? { credential } : {}),
                 });
                 // Expose the new note's id so pending file uploads can proceed
@@ -250,17 +295,6 @@
 
             <!-- Body (scrollable) -->
             <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-                {#if editMode}
-                    <!-- Color picker (edit mode only) -->
-                    <div class="flex items-center gap-2">
-                        <div class="flex gap-1 items-center">
-                            {#each COLORS as c}
-                                <button class="w-5 h-5 rounded-full transition-transform hover:scale-110 {COLOR_SWATCHES[c.value]}" class:ring-2={color === c.value} class:ring-primary={color === c.value} title={c.label} on:click={() => (color = c.value)} type="button" />
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
-
                 <!-- Editor / viewer -->
                 {#if editMode}
                     <div class="border border-base-300 rounded-xl overflow-hidden">
@@ -279,7 +313,7 @@
                     <!-- View mode: rendered HTML -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
-                    <div class="prose prose-sm max-w-none min-h-[120px]" on:click={handleViewClick}>
+                    <div class="prose prose-sm prose-headings:text-base-content prose-headings:font-semibold max-w-none min-h-[120px]" on:click={handleViewClick}>
                         {#if body}
                             {@html body}
                         {:else}
@@ -319,6 +353,102 @@
                             {/each}
                         </div>
                     {/if}
+                {/if}
+
+                {#if editMode}
+                    <!-- Color & tags (below editor) -->
+                    <div class="divider my-0">Style &amp; Tags</div>
+
+                    <!-- Color picker -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-base-content/50 w-10 shrink-0">Color</span>
+                        <div class="flex gap-1 items-center">
+                            {#each COLORS as c}
+                                <button class="w-5 h-5 rounded-full transition-transform hover:scale-110 {COLOR_SWATCHES[c.value]}" class:ring-2={color === c.value} class:ring-primary={color === c.value} title={c.label} on:click={() => (color = c.value)} type="button" />
+                            {/each}
+                        </div>
+                    </div>
+
+                    <!-- Tag editor -->
+                    <div class="flex flex-col gap-1.5">
+                        <span class="text-xs text-base-content/50">Tags</span>
+                        <div class="flex flex-wrap gap-1 items-center min-h-[28px]">
+                            {#each noteTags as tag (tag.id)}
+                                <span class="badge badge-sm gap-1 pr-0.5">
+                                    {#if tag.emoji}<span>{tag.emoji}</span>{/if}{tag.name}
+                                    <button class="ml-0.5 opacity-60 hover:opacity-100" on:click={() => removeTag(tag.id)} type="button" aria-label="Remove tag">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                                    </button>
+                                </span>
+                            {/each}
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    class="input input-ghost input-xs w-28 focus:outline-none px-1"
+                                    placeholder="Add tag…"
+                                    bind:value={tagInput}
+                                    on:focus={() => (showTagSuggestions = true)}
+                                    on:blur={() => setTimeout(() => (showTagSuggestions = false), 150)}
+                                    on:keydown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            if (tagSuggestions.length) addTag(tagSuggestions[0]);
+                                            else if (tagInput.trim()) createAndAddTag();
+                                        }
+                                    }}
+                                />
+                                {#if showTagSuggestions && (tagSuggestions.length > 0 || tagInput.trim())}
+                                    <div class="absolute top-full left-0 z-50 w-56 bg-base-200 border border-base-300 rounded-lg shadow-lg text-sm flex flex-col">
+                                        <!-- Existing tag matches (scrollable) -->
+                                        {#if tagSuggestions.length > 0}
+                                            <ul class="max-h-40 overflow-y-auto p-1">
+                                                {#each tagSuggestions as s}
+                                                    <li>
+                                                        <button class="w-full text-left px-2 py-1 hover:bg-base-300 rounded" on:mousedown|preventDefault={() => addTag(s)} type="button">
+                                                            {s.emoji ? s.emoji + " " : ""}{s.name}
+                                                        </button>
+                                                    </li>
+                                                {/each}
+                                            </ul>
+                                        {/if}
+                                        <!-- Create new tag row — outside scroll container so picker isn't clipped -->
+                                        {#if tagInput.trim() && !tagSuggestions.find((s) => s.name.toLowerCase() === tagInput.trim().toLowerCase())}
+                                            <div class="border-t border-base-300 p-1 relative">
+                                                <div class="flex items-center gap-1">
+                                                    <!-- Emoji button -->
+                                                    <button type="button" class="btn btn-xs btn-ghost w-9 px-0 text-base leading-none shrink-0" title="Pick emoji" on:mousedown|preventDefault={() => (showEmojiPicker = !showEmojiPicker)}>{newTagEmoji || "😀"}</button>
+                                                    <button class="flex-1 text-left py-1 px-1 hover:bg-base-300 rounded text-primary text-xs" on:mousedown|preventDefault={createAndAddTag} type="button">
+                                                        + Create "{tagInput.trim()}"
+                                                    </button>
+                                                </div>
+                                                <!-- Emoji grid — opens upward, outside any overflow container -->
+                                                {#if showEmojiPicker}
+                                                    <div class="absolute bottom-full left-0 mb-1 z-[70] bg-base-100 border border-base-300 rounded-xl shadow-2xl p-2 w-64" on:mousedown|preventDefault>
+                                                        <div class="grid grid-cols-10 gap-0.5">
+                                                            {#each EMOJIS as em}
+                                                                <button type="button" class="text-lg leading-none p-0.5 rounded hover:bg-base-200 transition-colors" on:mousedown|preventDefault={() => pickEmoji(em)}>{em}</button>
+                                                            {/each}
+                                                        </div>
+                                                        {#if newTagEmoji}
+                                                            <button
+                                                                type="button"
+                                                                class="mt-2 text-xs text-base-content/40 hover:text-base-content w-full text-left px-1"
+                                                                on:mousedown|preventDefault={() => {
+                                                                    newTagEmoji = "";
+                                                                    showEmojiPicker = false;
+                                                                    showTagSuggestions = true;
+                                                                }}>✕ Clear emoji</button
+                                                            >
+                                                        {/if}
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
+                    </div>
                 {/if}
 
                 {#if editMode}

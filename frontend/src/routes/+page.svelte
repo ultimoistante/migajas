@@ -86,13 +86,8 @@
 
 <!-- Navbar -->
 <nav class="navbar bg-base-100 border-b border-base-300 px-4 gap-2 sticky top-0 z-30">
-    <div class="flex-1 flex items-center gap-3">
-        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-primary-content" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-        </div>
-        <span class="font-bold text-lg hidden sm:inline">migajas</span>
+    <div class="flex-1 flex items-center">
+        <img src="/logo.svg" alt="migajas" class="h-10" />
     </div>
 
     <!-- Search -->

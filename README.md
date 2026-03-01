@@ -1,4 +1,4 @@
-# migajas
+![image info](./images/logo_big.svg)
 
 A privacy-focused, multi-user note-taking app with a **Go** backend and **SvelteKit + Tailwind / DaisyUI** frontend.
 

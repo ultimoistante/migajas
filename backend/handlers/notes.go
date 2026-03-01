@@ -328,8 +328,12 @@ func (h *NotesHandler) Unlock(w http.ResponseWriter, r *http.Request) {
 func (h *NotesHandler) getNote(noteID, userID string) (*models.Note, error) {
 	var note models.Note
 	err := h.db.Get(&note,
-		`SELECT id, user_id, title, body, is_secret, body_nonce, is_pinned, color, created_at, updated_at
-		 FROM notes WHERE id=? AND user_id=?`, noteID, userID,
+		`SELECT n.id, n.user_id, n.title, n.body, n.is_secret, n.body_nonce, n.is_pinned, n.color, n.created_at, n.updated_at,
+		        COUNT(a.id) AS attachment_count
+		 FROM notes n
+		 LEFT JOIN attachments a ON a.note_id = n.id
+		 WHERE n.id=? AND n.user_id=?
+		 GROUP BY n.id`, noteID, userID,
 	)
 	return &note, err
 }

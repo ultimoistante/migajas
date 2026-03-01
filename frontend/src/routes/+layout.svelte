@@ -6,7 +6,7 @@
     import { authStore, isAuthenticated } from "$lib/stores/auth";
     import { theme } from "$lib/stores/theme";
     import { setup } from "$lib/api/client";
-    import { appInitialized } from "$lib/stores/appState";
+    import { appInitialized, allowSelfRegistration } from "$lib/stores/appState";
 
     const PUBLIC_ROUTES = ["/login", "/register"];
 
@@ -16,6 +16,7 @@
         try {
             const status = await setup.status();
             appInitialized.set(status.initialized);
+            allowSelfRegistration.set(status.allow_self_registration);
         } catch {
             appInitialized.set(true); // if check fails, don't block the app
         }

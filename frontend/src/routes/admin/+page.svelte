@@ -4,6 +4,11 @@
     import { admin as adminApi, type User } from "$lib/api/client";
     import { currentUser } from "$lib/stores/auth";
 
+    // ── Self-registration setting ─────────────────────────────────────────────
+    let selfRegistration = false;
+    let srLoading = false;
+    let srError = "";
+
     // ── State ─────────────────────────────────────────────────────────────────
     let users: User[] = [];
     let loading = true;
@@ -44,8 +49,30 @@
             goto("/");
             return;
         }
-        await loadUsers();
+        await Promise.all([loadUsers(), loadSettings()]);
     });
+
+    async function loadSettings() {
+        try {
+            const s = await adminApi.getSettings();
+            selfRegistration = s.allow_self_registration;
+        } catch {
+            // non-fatal
+        }
+    }
+
+    async function toggleSelfRegistration() {
+        srError = "";
+        srLoading = true;
+        try {
+            const s = await adminApi.setSelfRegistration(!selfRegistration);
+            selfRegistration = s.allow_self_registration;
+        } catch (e) {
+            srError = e instanceof Error ? e.message : "Failed to update setting";
+        } finally {
+            srLoading = false;
+        }
+    }
 
     async function loadUsers() {
         loading = true;
@@ -159,6 +186,27 @@
     </nav>
 
     <div class="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-4">
+        <!-- Self-registration toggle -->
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+            <div class="card-body p-4">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="font-semibold text-sm">Allow self-registration</p>
+                        <p class="text-xs text-base-content/55 mt-0.5">When enabled, anyone can create an account on the login page.</p>
+                        {#if srError}
+                            <p class="text-xs text-error mt-1">{srError}</p>
+                        {/if}
+                    </div>
+                    <label class="cursor-pointer flex items-center gap-2">
+                        {#if srLoading}
+                            <span class="loading loading-spinner loading-xs text-primary" />
+                        {/if}
+                        <input type="checkbox" class="toggle toggle-primary toggle-sm" checked={selfRegistration} disabled={srLoading} on:change={toggleSelfRegistration} />
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- Create form -->
         {#if showCreate}
             <div class="card bg-base-100 border border-base-300 shadow-sm">

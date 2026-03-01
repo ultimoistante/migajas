@@ -241,6 +241,10 @@ export const attachments = {
 
 // ── Admin ──────────────────────────────────────────────────────────────────────
 
+export interface AdminSettings {
+    allow_self_registration: boolean;
+}
+
 export const admin = {
     listUsers: () => request<User[]>('GET', '/admin/users'),
     createUser: (payload: { username: string; email: string; password: string; is_admin: boolean }) =>
@@ -248,4 +252,7 @@ export const admin = {
     updateUser: (id: string, payload: { username?: string; email?: string; password?: string; is_admin?: boolean }) =>
         request<User>('PUT', `/admin/users/${id}`, payload),
     deleteUser: (id: string) => request<{ message: string }>('DELETE', `/admin/users/${id}`),
+    getSettings: () => request<AdminSettings>('GET', '/admin/settings'),
+    setSelfRegistration: (enabled: boolean) =>
+        request<AdminSettings>('PUT', '/admin/settings/self-registration', { enabled }),
 };

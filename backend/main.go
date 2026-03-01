@@ -103,6 +103,10 @@ func main() {
 		r.Post("/api/admin/users", adminHandler.CreateUser)
 		r.Put("/api/admin/users/{id}", adminHandler.UpdateUser)
 		r.Delete("/api/admin/users/{id}", adminHandler.DeleteUser)
+
+		// Admin — settings
+		r.Get("/api/admin/settings", adminHandler.GetSettings)
+		r.Put("/api/admin/settings/self-registration", adminHandler.UpdateSelfRegistration)
 	})
 
 	// Healthcheck

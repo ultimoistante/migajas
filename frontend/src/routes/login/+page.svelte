@@ -1,6 +1,7 @@
 <script lang="ts">
     import { authStore } from "$lib/stores/auth";
     import { goto } from "$app/navigation";
+    import { allowSelfRegistration } from "$lib/stores/appState";
 
     let usernameOrEmail = "";
     let password = "";
@@ -59,10 +60,12 @@
                 </button>
             </form>
 
-            <p class="text-center text-sm text-base-content/60">
-                Don't have an account?
-                <a href="/register" class="link link-primary font-medium">Create one</a>
-            </p>
+            {#if $allowSelfRegistration}
+                <p class="text-center text-sm text-base-content/60">
+                    Don't have an account?
+                    <a href="/register" class="link link-primary font-medium">Create one</a>
+                </p>
+            {/if}
         </div>
     </div>
 </div>

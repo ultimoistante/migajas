@@ -202,6 +202,50 @@ func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, updated.Public())
 }
 
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+type adminSettingsResponse struct {
+	AllowSelfRegistration bool `json:"allow_self_registration"`
+}
+
+func (h *AdminHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
+	if !h.requireAdmin(w, r) {
+		return
+	}
+	jsonResponse(w, http.StatusOK, adminSettingsResponse{
+		AllowSelfRegistration: AllowSelfRegistration(h.db),
+	})
+}
+
+type updateSelfRegistrationRequest struct {
+	Enabled bool `json:"enabled"`
+}
+
+func (h *AdminHandler) UpdateSelfRegistration(w http.ResponseWriter, r *http.Request) {
+	if !h.requireAdmin(w, r) {
+		return
+	}
+	var req updateSelfRegistrationRequest
+	if err := decodeJSON(r, &req); err != nil {
+		jsonError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	val := "false"
+	if req.Enabled {
+		val = "true"
+	}
+	_, err := h.db.Exec(
+		`INSERT INTO settings (key, value) VALUES ('allow_self_registration', ?)
+		 ON CONFLICT(key) DO UPDATE SET value=excluded.value`,
+		val,
+	)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to update setting")
+		return
+	}
+	jsonResponse(w, http.StatusOK, adminSettingsResponse{AllowSelfRegistration: req.Enabled})
+}
+
 // ── Delete user ───────────────────────────────────────────────────────────────
 
 func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {

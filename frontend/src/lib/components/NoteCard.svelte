@@ -72,7 +72,7 @@
             {#if (note.tags ?? []).length > 0}
                 <div class="flex flex-wrap gap-1">
                     {#each note.tags ?? [] as tag (tag.id)}
-                        <span class="badge badge-xs badge-outline gap-0.5 max-w-[7rem] truncate">
+                        <span class="badge badge-xs gap-0.5 max-w-[7rem] truncate border border-base-content/20 bg-transparent text-base-content">
                             {#if tag.emoji}<span>{tag.emoji}</span>{/if}{tag.name}
                         </span>
                     {/each}

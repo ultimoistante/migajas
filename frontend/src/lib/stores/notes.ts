@@ -28,6 +28,24 @@ function createNotesStore() {
         setUnlocked(unlocked: Note) {
             update((notes) => notes.map((n) => (n.id === unlocked.id ? unlocked : n)));
         },
+        /** Update the tag name/emoji inside every note that carries it */
+        patchTagInNotes(updatedTag: { id: string; name: string; emoji: string }) {
+            update((notes) =>
+                notes.map((n) => ({
+                    ...n,
+                    tags: n.tags?.map((t) => (t.id === updatedTag.id ? { ...t, ...updatedTag } : t)) ?? [],
+                }))
+            );
+        },
+        /** Strip a deleted tag from every note in the store */
+        removeTagFromNotes(tagId: string) {
+            update((notes) =>
+                notes.map((n) => ({
+                    ...n,
+                    tags: n.tags?.filter((t) => t.id !== tagId) ?? [],
+                }))
+            );
+        },
         /** Adjust attachment_count by delta without hitting the server */
         patchAttachmentCount(id: string, delta: number) {
             update((notes) =>

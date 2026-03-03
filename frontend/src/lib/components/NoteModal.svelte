@@ -187,6 +187,26 @@
                 }
                 await notesStore.update(note.id, payload);
                 dispatch("close");
+            } else if (currentNoteId) {
+                // Auto-save already created the note (e.g. a file was attached before
+                // the user clicked Save). Update it with the final title, body, tags
+                // and colour instead of creating a duplicate.
+                if (isSecret && !credential) {
+                    error = "Please enter your vault credential to create a secret note.";
+                    return;
+                }
+                const payload: Record<string, unknown> = {
+                    title: title || "Untitled",
+                    body,
+                    color,
+                    tags: noteTags.map((t) => t.id),
+                };
+                if (isSecret) {
+                    payload.is_secret = true;
+                    payload.credential = credential;
+                }
+                await notesStore.update(currentNoteId, payload);
+                dispatch("close");
             } else {
                 // Create new note
                 if (isSecret && !credential) {
@@ -235,10 +255,13 @@
 
     function handleAttachmentAdded(att: Attachment) {
         noteAttachments = [...noteAttachments, att];
+        // Keep the note card badge in sync immediately (no need to wait for save)
+        if (currentNoteId) notesStore.patchAttachmentCount(currentNoteId, 1);
     }
 
     function handleAttachmentDeleted(id: string) {
         noteAttachments = noteAttachments.filter((a) => a.id !== id);
+        if (currentNoteId) notesStore.patchAttachmentCount(currentNoteId, -1);
     }
 
     /**

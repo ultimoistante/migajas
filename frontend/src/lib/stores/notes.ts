@@ -28,6 +28,14 @@ function createNotesStore() {
         setUnlocked(unlocked: Note) {
             update((notes) => notes.map((n) => (n.id === unlocked.id ? unlocked : n)));
         },
+        /** Adjust attachment_count by delta without hitting the server */
+        patchAttachmentCount(id: string, delta: number) {
+            update((notes) =>
+                notes.map((n) =>
+                    n.id === id ? { ...n, attachment_count: (n.attachment_count ?? 0) + delta } : n
+                )
+            );
+        },
         reset() {
             set([]);
         }

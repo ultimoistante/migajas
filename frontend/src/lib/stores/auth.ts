@@ -18,7 +18,7 @@ function createAuthStore() {
                     method: 'POST',
                     credentials: 'include'
                 });
-                if (data.ok) {
+                if (data.ok && data.status !== 204) {
                     const json = await data.json();
                     setAccessToken(json.access_token);
                     const user = await authApi.me();

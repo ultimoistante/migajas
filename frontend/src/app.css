@@ -2,13 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+    .dashboard-shell {
+        background:
+            radial-gradient(1200px 500px at -20% -10%, rgba(95, 234, 211, 0.12), transparent 55%),
+            radial-gradient(1000px 420px at 110% -20%, rgba(45, 212, 191, 0.1), transparent 60%),
+            linear-gradient(180deg, #f2fbf9 0%, #eef7f8 45%, #e8f3f6 100%);
+    }
+
+    .dark .dashboard-shell {
+        background:
+            radial-gradient(1200px 500px at -20% -10%, rgba(14, 116, 144, 0.22), transparent 55%),
+            radial-gradient(1000px 420px at 110% -20%, rgba(56, 189, 248, 0.14), transparent 60%),
+            linear-gradient(180deg, #0a0f1f 0%, #080d19 45%, #060a14 100%);
+    }
+
+    .glass-nav {
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+        backdrop-filter: blur(8px);
+    }
+
+    .dark .glass-nav {
+        background: rgba(10, 18, 34, 0.74);
+        border: 1px solid rgba(51, 65, 85, 0.45);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .glass-panel {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(241, 245, 249, 0.95));
+        border: 1px solid rgba(100, 120, 150, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px rgba(15, 23, 42, 0.1), 0 1px 4px rgba(15, 23, 42, 0.07);
+    }
+
+    .dark .glass-panel {
+        background: linear-gradient(160deg, rgba(15, 23, 42, 0.9), rgba(10, 15, 30, 0.78));
+        border: 1px solid rgba(71, 85, 105, 0.35);
+        box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08), 0 10px 25px rgba(0, 0, 0, 0.28);
+    }
+
+    .script-title {
+        color: #0f172a;
+        letter-spacing: 0.01em;
+    }
+
+    .dark .script-title {
+        color: #e2e8f0;
+    }
+
+    .section-kicker {
+        color: #5fead3;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+    }
+
+    .dashboard-search {
+        @apply flex h-10 w-full rounded-xl border px-3 py-2 text-sm items-center gap-2 border-primary/30 bg-background/70 text-foreground;
+    }
+
+    .dashboard-chip-button {
+        @apply h-9 w-9 rounded-lg border p-0 inline-flex items-center justify-center border-border bg-card text-foreground hover:bg-muted;
+    }
+
+    .dashboard-user-trigger {
+        @apply list-none h-9 px-3 rounded-lg border text-sm inline-flex items-center justify-center gap-2 cursor-pointer border-border bg-card text-foreground hover:bg-muted;
+    }
+
+    .dashboard-user-badge {
+        @apply h-7 w-7 rounded-full inline-flex items-center justify-center text-xs font-bold border border-primary/40 bg-primary/20 text-primary;
+    }
+
+    .dashboard-user-menu {
+        @apply absolute right-0 mt-2 z-50 w-44 rounded-xl border shadow-2xl p-1.5 text-sm border-border bg-card text-foreground;
+    }
+
+    .dashboard-user-menu-item {
+        @apply block px-3 py-2 rounded-lg hover:bg-muted;
+    }
+}
+
+/* Define CSS variables for custom colors (shadcn/svelte compatible) */
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 215 25% 12%;
+        --card: 0 0% 100%;
+        --card-foreground: 215 25% 12%;
+        --primary: 170 77% 45%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 217.2 91.2% 59.8%;
+        --secondary-foreground: 222.2 47.6% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --muted: 210 40% 94%;
+        --muted-foreground: 215 20% 38%;
+        --accent: 170 77% 45%;
+        --accent-foreground: 0 0% 100%;
+        --border: 214.3 31.8% 82%;
+        --input: 214.3 31.8% 82%;
+        --ring: 170 77% 45%;
+    }
+
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --primary: 170 77% 65%;
+        --primary-foreground: 222.2 47.6% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 170 77% 65%;
+        --accent-foreground: 222.2 47.6% 11.2%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 170 77% 65%;
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
 /* TipTap editor styles */
 .tiptap {
     @apply outline-none min-h-[200px] px-1;
 }
 
 .tiptap p.is-editor-empty:first-child::before {
-    @apply text-base-content/40 pointer-events-none float-left h-0;
+    @apply text-muted-foreground pointer-events-none float-left h-0;
     content: attr(data-placeholder);
 }
 
@@ -26,7 +157,7 @@
 }
 
 .tiptap ul[data-type="taskList"] li>label input[type="checkbox"] {
-    @apply checkbox checkbox-primary checkbox-sm;
+    @apply w-4 h-4 accent-primary cursor-pointer;
 }
 
 .tiptap ul[data-type="taskList"] li>div {
@@ -52,7 +183,7 @@ ul[data-type="taskList"] li>label {
 }
 
 ul[data-type="taskList"] li>label input[type="checkbox"] {
-    @apply checkbox checkbox-primary checkbox-xs;
+    @apply w-4 h-4 accent-primary cursor-pointer;
 }
 
 ul[data-type="taskList"] li>div {
@@ -74,11 +205,11 @@ ul[data-type="taskList"] li>div {
 
 /* Code */
 .tiptap code {
-    @apply bg-base-300 rounded px-1 py-0.5 text-sm font-mono;
+    @apply bg-muted rounded px-1 py-0.5 text-sm font-mono;
 }
 
 .tiptap pre {
-    @apply bg-base-300 rounded-lg p-4 overflow-x-auto my-2;
+    @apply bg-muted rounded-lg p-4 overflow-x-auto my-2;
 }
 
 .tiptap pre code {
@@ -87,7 +218,7 @@ ul[data-type="taskList"] li>div {
 
 /* Blockquote */
 .tiptap blockquote {
-    @apply border-l-4 border-primary pl-4 italic my-2 text-base-content/70;
+    @apply border-l-4 border-primary pl-4 italic my-2 text-foreground/70;
 }
 
 /* Lists */
@@ -106,7 +237,7 @@ ul[data-type="taskList"] li>div {
 
 /* Horizontal rule */
 .tiptap hr {
-    @apply border-base-300 my-4;
+    @apply border-border my-4;
 }
 
 /* Badge overrides */

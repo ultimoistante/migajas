@@ -107,3 +107,50 @@ func RandomID(n int) (string, error) {
 	}
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
+
+// EncryptBodyWithKey encrypts plaintext with a pre-derived AES-256-GCM key,
+// returning (ciphertextB64, nonceB64, error). Used for credential rotation.
+func EncryptBodyWithKey(plaintext string, key []byte) (string, string, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", "", err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", "", err
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", "", err
+	}
+	ciphertext := gcm.Seal(nil, nonce, []byte(plaintext), nil)
+	return base64.StdEncoding.EncodeToString(ciphertext),
+		base64.StdEncoding.EncodeToString(nonce),
+		nil
+}
+
+// DecryptBodyWithKey decrypts a base64 ciphertext+nonce with a pre-derived
+// AES-256-GCM key. Used for credential rotation.
+func DecryptBodyWithKey(ciphertextB64, nonceB64 string, key []byte) (string, error) {
+	ciphertext, err := base64.StdEncoding.DecodeString(ciphertextB64)
+	if err != nil {
+		return "", fmt.Errorf("invalid ciphertext encoding: %w", err)
+	}
+	nonce, err := base64.StdEncoding.DecodeString(nonceB64)
+	if err != nil {
+		return "", fmt.Errorf("invalid nonce encoding: %w", err)
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	plain, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", errors.New("decryption failed: invalid credential or corrupted data")
+	}
+	return string(plain), nil
+}

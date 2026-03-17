@@ -8,6 +8,8 @@
     import { setup } from "$lib/api/client";
     import { appInitialized, allowSelfRegistration } from "$lib/stores/appState";
 
+    export let params: Record<string, string> = {};
+
     const PUBLIC_ROUTES = ["/login", "/register"];
 
     let setupChecked = false;
@@ -48,10 +50,10 @@
     }
 </script>
 
-<div data-theme={$theme} class="min-h-screen bg-base-200 text-base-content transition-colors duration-200">
+<div data-ui-theme={$theme} class="min-h-screen bg-background text-foreground transition-colors duration-200">
     {#if !setupChecked || (!$appInitialized && !$page.url.pathname.startsWith("/setup")) || $authStore.loading}
         <div class="flex items-center justify-center min-h-screen">
-            <span class="loading loading-spinner loading-lg text-primary" />
+            <span class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-current border-r-transparent text-primary" />
         </div>
     {:else}
         <slot />

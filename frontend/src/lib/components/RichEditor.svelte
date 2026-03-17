@@ -351,10 +351,10 @@
 
 {#if editor}
     <!-- ── Top Toolbar ─────────────────────────────────────────────────────── -->
-    <div class="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-base-300 bg-base-100">
+    <div class="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border bg-card">
         <!-- Emoji -->
         <div class="relative">
-            <button class="btn btn-ghost btn-xs px-2 text-base leading-none" class:btn-active={showEmojiPicker} title="Insert emoji" on:click={toggleEmojiPicker} type="button">☺</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-2 text-base leading-none" class:btn-active={showEmojiPicker} title="Insert emoji" on:click={toggleEmojiPicker} type="button">☺</button>
             {#if showEmojiPicker}
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div class="absolute left-0 top-8 z-50 shadow-2xl" bind:this={emojiPickerEl} on:keydown={(e) => e.key === "Escape" && (showEmojiPicker = false)} />
@@ -367,34 +367,34 @@
 
         <!-- Headings -->
         {#each [1, 2, 3] as level}
-            <button class="btn btn-ghost btn-xs px-1.5 font-bold" class:btn-active={editor.isActive("heading", { level })} title="Heading {level}" on:click={() => editor?.chain().focus().toggleHeading({ level }).run()} type="button">H{level}</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 font-bold" class:btn-active={editor.isActive("heading", { level })} title="Heading {level}" on:click={() => editor?.chain().focus().toggleHeading({ level }).run()} type="button">H{level}</button>
         {/each}
 
         <span class="w-px h-5 bg-base-300 mx-0.5" />
 
         <!-- Bold -->
-        <button class="btn btn-ghost btn-xs px-1.5 font-bold" class:btn-active={editor.isActive("bold")} title="Bold" on:click={() => editor?.chain().focus().toggleBold().run()} type="button">B</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 font-bold" class:btn-active={editor.isActive("bold")} title="Bold" on:click={() => editor?.chain().focus().toggleBold().run()} type="button">B</button>
 
         <!-- Italic -->
-        <button class="btn btn-ghost btn-xs px-1.5 italic font-semibold" class:btn-active={editor.isActive("italic")} title="Italic" on:click={() => editor?.chain().focus().toggleItalic().run()} type="button">I</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 italic font-semibold" class:btn-active={editor.isActive("italic")} title="Italic" on:click={() => editor?.chain().focus().toggleItalic().run()} type="button">I</button>
 
         <!-- Strikethrough -->
-        <button class="btn btn-ghost btn-xs px-1.5 line-through" class:btn-active={editor.isActive("strike")} title="Strikethrough" on:click={() => editor?.chain().focus().toggleStrike().run()} type="button">S</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 line-through" class:btn-active={editor.isActive("strike")} title="Strikethrough" on:click={() => editor?.chain().focus().toggleStrike().run()} type="button">S</button>
 
         <span class="w-px h-5 bg-base-300 mx-0.5" />
 
         <!-- Link -->
         <div class="relative">
-            <button class="btn btn-ghost btn-xs px-1.5" class:btn-active={editor.isActive("link")} title="Link" on:click={toggleLink} type="button">
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" class:btn-active={editor.isActive("link")} title="Link" on:click={toggleLink} type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
             </button>
             {#if showLinkInput}
-                <div class="absolute left-0 top-8 z-50 flex gap-1 bg-base-100 border border-base-300 rounded-xl shadow-xl p-2 w-64">
-                    <input class="input input-bordered input-xs flex-1" placeholder="https://…" bind:value={linkUrl} on:keydown={(e) => e.key === "Enter" && applyLink()} autofocus />
-                    <button class="btn btn-primary btn-xs" on:click={applyLink} type="button">OK</button>
+                <div class="absolute left-0 top-8 z-50 flex gap-1 bg-card border border-border rounded-xl shadow-xl p-2 w-64">
+                    <input class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm flex-1" placeholder="https://…" bind:value={linkUrl} on:keydown={(e) => e.key === "Enter" && applyLink()} autofocus />
+                    <button class="h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md inline-flex items-center justify-center" on:click={applyLink} type="button">OK</button>
                 </div>
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div class="fixed inset-0 z-40" on:click={() => (showLinkInput = false)} on:keydown={() => {}} />
@@ -404,7 +404,7 @@
         <span class="w-px h-5 bg-base-300 mx-0.5" />
 
         <!-- Bullet list -->
-        <button class="btn btn-ghost btn-xs px-1.5" class:btn-active={editor.isActive("bulletList")} title="Bullet list" on:click={() => editor?.chain().focus().toggleBulletList().run()} type="button">
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" class:btn-active={editor.isActive("bulletList")} title="Bullet list" on:click={() => editor?.chain().focus().toggleBulletList().run()} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" />
                 <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none" />
@@ -414,7 +414,7 @@
         </button>
 
         <!-- Ordered list -->
-        <button class="btn btn-ghost btn-xs px-1.5" class:btn-active={editor.isActive("orderedList")} title="Ordered list" on:click={() => editor?.chain().focus().toggleOrderedList().run()} type="button">
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" class:btn-active={editor.isActive("orderedList")} title="Ordered list" on:click={() => editor?.chain().focus().toggleOrderedList().run()} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="10" y1="6" x2="21" y2="6" /><line x1="10" y1="12" x2="21" y2="12" /><line x1="10" y1="18" x2="21" y2="18" />
                 <path d="M4 6h1v4" stroke-linecap="round" /><path d="M4 10h2" stroke-linecap="round" />
@@ -423,7 +423,7 @@
         </button>
 
         <!-- Task list -->
-        <button class="btn btn-ghost btn-xs px-1.5" class:btn-active={editor.isActive("taskList")} title="Task list (to-do)" on:click={() => editor?.chain().focus().toggleTaskList().run()} type="button">
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" class:btn-active={editor.isActive("taskList")} title="Task list (to-do)" on:click={() => editor?.chain().focus().toggleTaskList().run()} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="5" width="6" height="6" rx="1" />
                 <path d="m4.5 8 1.5 1.5 3-3" stroke-linecap="round" stroke-linejoin="round" />
@@ -436,7 +436,7 @@
         <span class="w-px h-5 bg-base-300 mx-0.5" />
 
         <!-- Table -->
-        <button class="btn btn-ghost btn-xs px-1.5" class:btn-active={editor.isActive("table")} title="Insert table" on:click={insertTable} type="button">
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" class:btn-active={editor.isActive("table")} title="Insert table" on:click={insertTable} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <line x1="3" y1="9" x2="21" y2="9" />
@@ -449,31 +449,31 @@
         <span class="w-px h-5 bg-base-300 mx-0.5" />
 
         <!-- Inline code -->
-        <button class="btn btn-ghost btn-xs px-1.5 font-mono" class:btn-active={editor.isActive("code")} title="Inline code" on:click={() => editor?.chain().focus().toggleCode().run()} type="button">&lt;/&gt;</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 font-mono" class:btn-active={editor.isActive("code")} title="Inline code" on:click={() => editor?.chain().focus().toggleCode().run()} type="button">&lt;/&gt;</button>
 
         <!-- Code block -->
-        <button class="btn btn-ghost btn-xs px-1.5 font-mono text-xs" class:btn-active={editor.isActive("codeBlock")} title="Code block" on:click={() => editor?.chain().focus().toggleCodeBlock().run()} type="button">```</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 font-mono text-xs" class:btn-active={editor.isActive("codeBlock")} title="Code block" on:click={() => editor?.chain().focus().toggleCodeBlock().run()} type="button">```</button>
 
         <span class="w-px h-5 bg-base-300 mx-0.5" />
 
         <!-- Blockquote -->
-        <button class="btn btn-ghost btn-xs px-1.5" class:btn-active={editor.isActive("blockquote")} title="Blockquote" on:click={() => editor?.chain().focus().toggleBlockquote().run()} type="button">❝</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" class:btn-active={editor.isActive("blockquote")} title="Blockquote" on:click={() => editor?.chain().focus().toggleBlockquote().run()} type="button">❝</button>
 
         <!-- Horizontal rule -->
-        <button class="btn btn-ghost btn-xs px-1.5" title="Horizontal rule" on:click={() => editor?.chain().focus().setHorizontalRule().run()} type="button">—</button>
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" title="Horizontal rule" on:click={() => editor?.chain().focus().setHorizontalRule().run()} type="button">—</button>
 
         <!-- Spacer -->
         <span class="flex-1" />
 
         <!-- Undo -->
-        <button class="btn btn-ghost btn-xs px-1.5" title="Undo" disabled={!editor.can().undo()} on:click={() => editor?.chain().focus().undo().run()} type="button">
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" title="Undo" disabled={!editor.can().undo()} on:click={() => editor?.chain().focus().undo().run()} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
             </svg>
         </button>
 
         <!-- Redo -->
-        <button class="btn btn-ghost btn-xs px-1.5" title="Redo" disabled={!editor.can().redo()} on:click={() => editor?.chain().focus().redo().run()} type="button">
+        <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" title="Redo" disabled={!editor.can().redo()} on:click={() => editor?.chain().focus().redo().run()} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
             </svg>
@@ -482,17 +482,17 @@
 
     <!-- ── Table context toolbar ──────────────────────────────────────────── -->
     {#if isInTable}
-        <div class="flex flex-wrap items-center gap-0.5 px-2 py-1 border-b border-base-300 bg-base-200">
-            <span class="text-base-content/40 text-xs mr-1">Table:</span>
-            <button class="btn btn-ghost btn-xs px-1.5" on:click={() => editor?.chain().focus().addColumnBefore().run()} type="button">+Col←</button>
-            <button class="btn btn-ghost btn-xs px-1.5" on:click={() => editor?.chain().focus().addColumnAfter().run()} type="button">+Col→</button>
-            <button class="btn btn-ghost btn-xs px-1.5" on:click={() => editor?.chain().focus().deleteColumn().run()} type="button">−Col</button>
+        <div class="flex flex-wrap items-center gap-0.5 px-2 py-1 border-b border-border bg-muted">
+            <span class="text-muted-foreground text-xs mr-1">Table:</span>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" on:click={() => editor?.chain().focus().addColumnBefore().run()} type="button">+Col←</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" on:click={() => editor?.chain().focus().addColumnAfter().run()} type="button">+Col→</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" on:click={() => editor?.chain().focus().deleteColumn().run()} type="button">−Col</button>
             <span class="w-px h-4 bg-base-300 mx-0.5" />
-            <button class="btn btn-ghost btn-xs px-1.5" on:click={() => editor?.chain().focus().addRowBefore().run()} type="button">+Row↑</button>
-            <button class="btn btn-ghost btn-xs px-1.5" on:click={() => editor?.chain().focus().addRowAfter().run()} type="button">+Row↓</button>
-            <button class="btn btn-ghost btn-xs px-1.5" on:click={() => editor?.chain().focus().deleteRow().run()} type="button">−Row</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" on:click={() => editor?.chain().focus().addRowBefore().run()} type="button">+Row↑</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" on:click={() => editor?.chain().focus().addRowAfter().run()} type="button">+Row↓</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5" on:click={() => editor?.chain().focus().deleteRow().run()} type="button">−Row</button>
             <span class="w-px h-4 bg-base-300 mx-0.5" />
-            <button class="btn btn-ghost btn-xs px-1.5 text-error" on:click={() => editor?.chain().focus().deleteTable().run()} type="button">✕ Table</button>
+            <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center px-1.5 text-destructive" on:click={() => editor?.chain().focus().deleteTable().run()} type="button">✕ Table</button>
         </div>
     {/if}
 {/if}
@@ -502,10 +502,10 @@
 
 {#if editable}
     <!-- ── Bottom Bar ─────────────────────────────────────────────────────── -->
-    <div class="flex items-center gap-1 px-3 py-1.5 border-t border-base-300 bg-base-100">
+    <div class="flex items-center gap-1 px-3 py-1.5 border-t border-border bg-card">
         <!-- Note reference picker -->
         <div class="relative">
-            <button class="btn btn-ghost btn-xs gap-1.5" class:btn-active={showNoteRefPicker} title="Link to another note" on:click={() => (showNoteRefPicker = !showNoteRefPicker)} type="button">
+            <button class="h-8 px-2 rounded-md border border-border bg-card/80 hover:bg-muted inline-flex items-center justify-center gap-1.5 text-xs" class:btn-active={showNoteRefPicker} title="Link to another note" on:click={() => (showNoteRefPicker = !showNoteRefPicker)} type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -513,16 +513,16 @@
                 Note
             </button>
             {#if showNoteRefPicker}
-                <div class="absolute bottom-9 left-0 z-50 bg-base-100 border border-base-300 rounded-xl shadow-xl w-64 flex flex-col max-h-60">
+                <div class="absolute bottom-9 left-0 z-50 bg-card border border-border rounded-xl shadow-xl w-64 flex flex-col max-h-60">
                     <div class="p-2 border-b border-base-200">
-                        <input class="input input-bordered input-xs w-full" placeholder="Search notes…" bind:value={noteRefSearch} autofocus />
+                        <input class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm w-full" placeholder="Search notes…" bind:value={noteRefSearch} autofocus />
                     </div>
                     <div class="overflow-y-auto flex-1">
                         {#if filteredNotes.length === 0}
-                            <p class="text-xs text-base-content/40 p-3 text-center">No notes found</p>
+                            <p class="text-xs text-muted-foreground p-3 text-center">No notes found</p>
                         {:else}
                             {#each filteredNotes as n}
-                                <button class="w-full text-left px-3 py-1.5 text-sm hover:bg-base-200 transition-colors" on:click={() => insertNoteRef(n)} type="button">{n.title || "(Untitled)"}</button>
+                                <button class="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors" on:click={() => insertNoteRef(n)} type="button">{n.title || "(Untitled)"}</button>
                             {/each}
                         {/if}
                     </div>
@@ -534,7 +534,7 @@
 
         <!-- File upload -->
         <input type="file" class="hidden" bind:this={fileInput} on:change={handleFileSelected} />
-        <button class="btn btn-ghost btn-xs gap-1.5" title="Attach file" on:click={() => fileInput.click()} type="button" disabled={uploading}>
+        <button class="h-8 px-2 rounded-md border border-border bg-card/80 hover:bg-muted inline-flex items-center justify-center gap-1.5 text-xs disabled:opacity-60" title="Attach file" on:click={() => fileInput.click()} type="button" disabled={uploading}>
             {#if uploading}
                 <span class="loading loading-spinner loading-xs" />
                 Uploading…
@@ -547,7 +547,7 @@
         </button>
 
         <!-- Voice recording -->
-        <button class="btn btn-ghost btn-xs gap-1.5" class:text-error={isRecording} title={isRecording ? "Stop recording" : "Record voice memo"} on:click={toggleRecording} type="button">
+        <button class="h-8 px-2 rounded-md border border-border bg-card/80 hover:bg-muted inline-flex items-center justify-center gap-1.5 text-xs" class:text-destructive={isRecording} title={isRecording ? "Stop recording" : "Record voice memo"} on:click={toggleRecording} type="button">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" class:animate-pulse={isRecording} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -565,21 +565,21 @@
 
     <!-- ── Attachments panel ──────────────────────────────────────────────── -->
     {#if attachments.length > 0}
-        <div class="border-t border-base-300 px-3 py-2 flex flex-col gap-2">
-            <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wide">Attachments</p>
+        <div class="border-t border-border px-3 py-2 flex flex-col gap-2">
+            <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Attachments</p>
             {#each attachments as att (att.id)}
                 <div class="flex items-start gap-2 text-sm">
                     <span class="text-base mt-0.5 shrink-0">{fileIcon(att.mime_type)}</span>
                     <div class="flex-1 min-w-0">
                         <a href={attachmentsApi.contentUrl(att.id)} class="text-sm font-medium hover:underline truncate block" download={att.original_name} target="_blank" rel="noopener">{att.original_name}</a>
-                        <span class="text-xs text-base-content/40">{formatSize(att.size)}</span>
+                        <span class="text-xs text-muted-foreground">{formatSize(att.size)}</span>
                         {#if att.mime_type.startsWith("image/")}
                             {#if imageBlobUrls[att.id]}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                                 <img src={imageBlobUrls[att.id]} alt={att.original_name} class="mt-1 max-h-24 rounded cursor-pointer object-cover hover:opacity-80 transition-opacity" on:click={() => (previewImageId = att.id)} />
                             {:else}
-                                <div class="flex items-center gap-1 mt-1 text-xs text-base-content/40">
+                                <div class="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                     <span class="loading loading-spinner loading-xs" />
                                     Loading image…
                                 </div>
@@ -590,14 +590,14 @@
                                 <!-- svelte-ignore a11y-media-has-caption -->
                                 <audio controls class="w-full mt-1" src={audioBlobUrls[att.id]} />
                             {:else}
-                                <div class="flex items-center gap-1 mt-1 text-xs text-base-content/40">
+                                <div class="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                     <span class="loading loading-spinner loading-xs" />
                                     Loading audio…
                                 </div>
                             {/if}
                         {/if}
                     </div>
-                    <button class="btn btn-ghost btn-xs btn-circle text-error shrink-0" title="Delete attachment" on:click={() => deleteAttachment(att.id)} type="button">
+                    <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center text-destructive shrink-0" title="Delete attachment" on:click={() => deleteAttachment(att.id)} type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M18 6 6 18M6 6l12 12" />
                         </svg>
@@ -617,7 +617,7 @@
             <img src={imageBlobUrls[previewImageId]} alt={previewAtt?.original_name ?? ""} class="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain" />
             <div class="flex items-center gap-2">
                 {#if previewAtt}
-                    <a href={imageBlobUrls[previewImageId]} download={previewAtt.original_name} class="btn btn-sm btn-neutral gap-1.5">
+                    <a href={imageBlobUrls[previewImageId]} download={previewAtt.original_name} class="h-9 px-3 rounded-md inline-flex items-center justify-center text-sm btn-neutral gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="7 10 12 15 17 10" />
@@ -626,7 +626,7 @@
                         Download
                     </a>
                 {/if}
-                <button class="btn btn-sm btn-ghost text-white gap-1.5" on:click={() => (previewImageId = null)} type="button">
+                <button class="h-9 px-3 rounded-md inline-flex items-center justify-center text-sm btn-ghost text-white gap-1.5" on:click={() => (previewImageId = null)} type="button">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 6 6 18M6 6l12 12" />
                     </svg>

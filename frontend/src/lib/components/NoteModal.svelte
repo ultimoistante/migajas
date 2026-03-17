@@ -113,7 +113,7 @@
     ];
 
     const COLOR_SWATCHES: Record<string, string> = {
-        "": "bg-base-100 border-2 border-base-300",
+        "": "bg-card border-2 border-border",
         yellow: "bg-yellow-300",
         blue: "bg-blue-300",
         green: "bg-green-300",
@@ -289,18 +289,18 @@
 {#if open}
     <!-- Backdrop -->
     <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" on:click|self={close} on:keydown={(e) => e.key === "Escape" && close()} role="dialog" aria-modal="true">
-        <div class="bg-base-100 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" on:click|stopPropagation>
+        <div class="bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col" on:click|stopPropagation>
             <!-- Header -->
-            <div class="flex items-center gap-3 p-5 border-b border-base-300">
+            <div class="flex items-center gap-3 p-5 border-b border-border">
                 {#if editMode}
-                    <input type="text" placeholder="Note title" class="input input-ghost text-xl font-semibold flex-1 focus:outline-none px-0" bind:value={title} />
+                    <input type="text" placeholder="Note title" class="h-10 w-full rounded-md border border-border bg-card px-3 text-xl font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/35" bind:value={title} />
                 {:else}
                     <h2 class="text-xl font-semibold flex-1 line-clamp-2">{title || "Untitled"}</h2>
                 {/if}
 
                 <!-- Pencil (enter edit mode) — only in view mode for existing notes -->
                 {#if note && !editMode}
-                    <button class="btn btn-ghost btn-sm btn-circle" title="Edit note" on:click={() => (editMode = true)} type="button">
+                    <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center" title="Edit note" on:click={() => (editMode = true)} type="button">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -309,7 +309,7 @@
                 {/if}
 
                 <!-- Close -->
-                <button class="btn btn-ghost btn-sm btn-circle" on:click={close} type="button">
+                <button class="h-8 w-8 rounded-md hover:bg-muted p-0 inline-flex items-center justify-center" on:click={close} type="button">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
@@ -320,12 +320,12 @@
             <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
                 <!-- Editor / viewer -->
                 {#if editMode}
-                    <div class="border border-base-300 rounded-xl overflow-hidden">
+                    <div class="border border-border rounded-xl overflow-hidden">
                         <RichEditor content={body} editable={true} placeholder="Write something…" noteId={currentNoteId} allNotes={$notesStore} attachments={noteAttachments} on:change={(e) => (body = e.detail)} on:autoSave={handleAutoSave} on:attachmentAdded={(e) => handleAttachmentAdded(e.detail)} on:attachmentDeleted={(e) => handleAttachmentDeleted(e.detail)} />
                     </div>
                 {:else if note?.is_secret && note?.is_locked}
                     <!-- Secret and still locked: big lock -->
-                    <div class="flex flex-col items-center justify-center py-12 text-base-content/30">
+                    <div class="flex flex-col items-center justify-center py-12 text-muted-foreground/70">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -336,16 +336,16 @@
                     <!-- View mode: rendered HTML -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
-                    <div class="prose prose-sm prose-headings:text-base-content prose-headings:font-semibold max-w-none min-h-[120px]" on:click={handleViewClick}>
+                    <div class="prose prose-sm prose-headings:text-foreground prose-headings:font-semibold max-w-none min-h-[120px]" on:click={handleViewClick}>
                         {#if body}
                             {@html body}
                         {:else}
-                            <p class="text-base-content/40 italic">Empty note</p>
+                            <p class="text-muted-foreground italic">Empty note</p>
                         {/if}
                     </div>
                     {#if noteAttachments.length > 0}
                         <div class="mt-3 flex flex-col gap-1.5">
-                            <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wide">Attachments</p>
+                            <p class="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Attachments</p>
                             {#each noteAttachments as att (att.id)}
                                 <div class="flex flex-col gap-1 text-sm">
                                     <div class="flex items-center gap-2">
@@ -358,7 +358,7 @@
                                             <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                                             <img src={imageBlobUrls[att.id]} alt={att.original_name} class="max-h-32 rounded cursor-pointer object-cover hover:opacity-80 transition-opacity self-start" on:click={() => (previewImageId = att.id)} />
                                         {:else}
-                                            <div class="flex items-center gap-1 text-xs text-base-content/40">
+                                            <div class="flex items-center gap-1 text-xs text-muted-foreground">
                                                 <span class="loading loading-spinner loading-xs" />
                                                 Loading image…
                                             </div>
@@ -384,7 +384,7 @@
 
                     <!-- Color picker -->
                     <div class="flex items-center gap-2">
-                        <span class="text-xs text-base-content/50 w-10 shrink-0">Color</span>
+                        <span class="text-xs text-muted-foreground w-10 shrink-0">Color</span>
                         <div class="flex gap-1 items-center">
                             {#each COLORS as c}
                                 <button class="w-5 h-5 rounded-full transition-transform hover:scale-110 {COLOR_SWATCHES[c.value]}" class:ring-2={color === c.value} class:ring-primary={color === c.value} title={c.label} on:click={() => (color = c.value)} type="button" />
@@ -394,10 +394,10 @@
 
                     <!-- Tag editor -->
                     <div class="flex flex-col gap-1.5">
-                        <span class="text-xs text-base-content/50">Tags</span>
+                        <span class="text-xs text-muted-foreground">Tags</span>
                         <div class="flex flex-wrap gap-1 items-center min-h-[28px]">
                             {#each noteTags as tag (tag.id)}
-                                <span class="badge badge-sm gap-1 pr-0.5">
+                                <span class="text-sm px-2 py-1 rounded inline-flex items-center gap-1 pr-0.5">
                                     {#if tag.emoji}<span>{tag.emoji}</span>{/if}{tag.name}
                                     <button class="ml-0.5 opacity-60 hover:opacity-100" on:click={() => removeTag(tag.id)} type="button" aria-label="Remove tag">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -407,7 +407,7 @@
                             <div class="relative">
                                 <input
                                     type="text"
-                                    class="input input-ghost input-xs w-28 focus:outline-none px-1"
+                                    class="h-8 w-28 rounded-md border border-border bg-card px-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/35"
                                     placeholder="Add tag…"
                                     bind:value={tagInput}
                                     on:focus={() => (showTagSuggestions = true)}
@@ -421,7 +421,7 @@
                                     }}
                                 />
                                 {#if showTagSuggestions && (tagSuggestions.length > 0 || tagInput.trim())}
-                                    <div class="absolute top-full left-0 z-50 w-56 bg-base-200 border border-base-300 rounded-lg shadow-lg text-sm flex flex-col">
+                                    <div class="absolute top-full left-0 z-50 w-56 bg-muted border border-border rounded-lg shadow-lg text-sm flex flex-col">
                                         <!-- Existing tag matches (scrollable) -->
                                         {#if tagSuggestions.length > 0}
                                             <ul class="max-h-40 overflow-y-auto p-1">
@@ -436,26 +436,26 @@
                                         {/if}
                                         <!-- Create new tag row — outside scroll container so picker isn't clipped -->
                                         {#if tagInput.trim() && !tagSuggestions.find((s) => s.name.toLowerCase() === tagInput.trim().toLowerCase())}
-                                            <div class="border-t border-base-300 p-1 relative">
+                                            <div class="border-t border-border p-1 relative">
                                                 <div class="flex items-center gap-1">
                                                     <!-- Emoji button -->
-                                                    <button type="button" class="btn btn-xs btn-ghost w-9 px-0 text-base leading-none shrink-0" title="Pick emoji" on:mousedown|preventDefault={() => (showEmojiPicker = !showEmojiPicker)}>{newTagEmoji || "😀"}</button>
+                                                    <button type="button" class="h-8 px-2 rounded-md inline-flex items-center justify-center text-xs btn-ghost w-9 px-0 text-base leading-none shrink-0" title="Pick emoji" on:mousedown|preventDefault={() => (showEmojiPicker = !showEmojiPicker)}>{newTagEmoji || "😀"}</button>
                                                     <button class="flex-1 text-left py-1 px-1 hover:bg-base-300 rounded text-primary text-xs" on:mousedown|preventDefault={createAndAddTag} type="button">
                                                         + Create "{tagInput.trim()}"
                                                     </button>
                                                 </div>
                                                 <!-- Emoji grid — opens upward, outside any overflow container -->
                                                 {#if showEmojiPicker}
-                                                    <div class="absolute bottom-full left-0 mb-1 z-[70] bg-base-100 border border-base-300 rounded-xl shadow-2xl p-2 w-64" on:mousedown|preventDefault>
+                                                    <div class="absolute bottom-full left-0 mb-1 z-[70] bg-card border border-border rounded-xl shadow-2xl p-2 w-64" on:mousedown|preventDefault>
                                                         <div class="grid grid-cols-10 gap-0.5">
                                                             {#each EMOJIS as em}
-                                                                <button type="button" class="text-lg leading-none p-0.5 rounded hover:bg-base-200 transition-colors" on:mousedown|preventDefault={() => pickEmoji(em)}>{em}</button>
+                                                                <button type="button" class="text-lg leading-none p-0.5 rounded hover:bg-muted transition-colors" on:mousedown|preventDefault={() => pickEmoji(em)}>{em}</button>
                                                             {/each}
                                                         </div>
                                                         {#if newTagEmoji}
                                                             <button
                                                                 type="button"
-                                                                class="mt-2 text-xs text-base-content/40 hover:text-base-content w-full text-left px-1"
+                                                                class="mt-2 text-xs text-muted-foreground hover:text-foreground w-full text-left px-1"
                                                                 on:mousedown|preventDefault={() => {
                                                                     newTagEmoji = "";
                                                                     showEmojiPicker = false;
@@ -486,20 +486,24 @@
                             <span>You haven't set up a vault credential yet. Go to <strong>Settings</strong> to set your PIN or vault password first.</span>
                         </div>
                     {:else}
-                        <label class="label cursor-pointer justify-start gap-3 p-0">
-                            <input type="checkbox" class="toggle toggle-warning toggle-sm" bind:checked={isSecret} />
-                            <span class="label-text flex items-center gap-1.5">
+                        <label class="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 px-3 py-2 cursor-pointer">
+                            <span class="flex items-center gap-2 text-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                 </svg>
                                 {isSecret ? "Secret note (encrypted)" : "Make this a secret note"}
                             </span>
+                            <span class="relative inline-flex h-5 w-10 shrink-0 items-center">
+                                <input type="checkbox" class="peer sr-only" bind:checked={isSecret} aria-label="Toggle secret note" />
+                                <span class="absolute inset-0 rounded-full bg-muted transition-colors peer-checked:bg-primary/70" />
+                                <span class="absolute left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
+                            </span>
                         </label>
 
                         {#if isSecret || note?.is_secret}
                             <div>
-                                <label class="label pb-1" for="cred-input">
-                                    <span class="label-text text-sm">
+                                <label class="flex flex-col gap-1.5 pb-1" for="cred-input">
+                                    <span class="flex flex-col gap-1.5-text text-sm">
                                         {#if secretStateChanged}
                                             {isSecret ? "Enter vault credential to encrypt this note" : "Enter vault credential to decrypt and un-secret this note"}
                                         {:else}
@@ -507,9 +511,9 @@
                                         {/if}
                                     </span>
                                 </label>
-                                <input id="cred-input" type="password" placeholder="Vault PIN or password" class="input input-bordered w-full input-sm" bind:value={credential} autocomplete="off" />
+                                <input id="cred-input" type="password" placeholder="Vault PIN or password" class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm w-full" bind:value={credential} autocomplete="off" />
                                 {#if secretStateChanged && isSecret}
-                                    <p class="text-xs text-base-content/50 mt-1">The note body will be encrypted end-to-end. You'll need this credential to unlock it later.</p>
+                                    <p class="text-xs text-foreground/80 mt-1">The note body will be encrypted end-to-end. You'll need this credential to unlock it later.</p>
                                 {/if}
                             </div>
                         {/if}
@@ -517,16 +521,16 @@
                 {/if}
 
                 {#if error}
-                    <div class="alert alert-error text-sm">{error}</div>
+                    <div class="bg-destructive text-destructive-foreground px-4 py-3 rounded-md text-sm">{error}</div>
                 {/if}
             </div>
 
             <!-- Footer -->
             {#if editMode}
-                <div class="flex justify-end gap-2 p-4 border-t border-base-300">
+                <div class="flex justify-end gap-2 p-4 border-t border-border">
                     {#if note}
                         <button
-                            class="btn btn-ghost btn-sm"
+                            class="h-9 px-3 rounded-md hover:bg-muted text-sm inline-flex items-center justify-center"
                             on:click={() => {
                                 editMode = false;
                                 error = "";
@@ -534,9 +538,9 @@
                             type="button">Cancel</button
                         >
                     {:else}
-                        <button class="btn btn-ghost btn-sm" on:click={close} type="button">Cancel</button>
+                        <button class="h-9 px-3 rounded-md hover:bg-muted text-sm inline-flex items-center justify-center" on:click={close} type="button">Cancel</button>
                     {/if}
-                    <button class="btn btn-primary btn-sm" on:click={save} disabled={saving || (!note && isSecret && (!hasVault || !credential)) || (secretStateChanged && !credential)} type="button">
+                    <button class="h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md inline-flex items-center justify-center" on:click={save} disabled={saving || (!note && isSecret && (!hasVault || !credential)) || (secretStateChanged && !credential)} type="button">
                         {#if saving}
                             <span class="loading loading-spinner loading-xs" />
                         {/if}
@@ -544,8 +548,8 @@
                     </button>
                 </div>
             {:else}
-                <div class="flex justify-end gap-2 p-4 border-t border-base-300">
-                    <button class="btn btn-ghost btn-sm" on:click={close} type="button">Close</button>
+                <div class="flex justify-end gap-2 p-4 border-t border-border">
+                    <button class="h-9 px-3 rounded-md hover:bg-muted text-sm inline-flex items-center justify-center" on:click={close} type="button">Close</button>
                 </div>
             {/if}
         </div>
@@ -561,7 +565,7 @@
             <img src={imageBlobUrls[previewImageId]} alt={previewAtt?.original_name ?? ""} class="max-w-full max-h-[80vh] rounded-lg shadow-2xl object-contain" />
             <div class="flex items-center gap-2">
                 {#if previewAtt}
-                    <a href={imageBlobUrls[previewImageId]} download={previewAtt.original_name} class="btn btn-sm btn-neutral gap-1.5">
+                    <a href={imageBlobUrls[previewImageId]} download={previewAtt.original_name} class="h-9 px-3 rounded-md inline-flex items-center justify-center text-sm btn-neutral gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="7 10 12 15 17 10" />
@@ -570,7 +574,7 @@
                         Download
                     </a>
                 {/if}
-                <button class="btn btn-sm btn-ghost text-white gap-1.5" on:click={() => (previewImageId = null)} type="button">
+                <button class="h-9 px-3 rounded-md inline-flex items-center justify-center text-sm btn-ghost text-white gap-1.5" on:click={() => (previewImageId = null)} type="button">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 6 6 18M6 6l12 12" />
                     </svg>

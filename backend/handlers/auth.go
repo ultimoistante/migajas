@@ -156,7 +156,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		jsonError(w, http.StatusUnauthorized, "no refresh token")
+		// No cookie present — not an error, just no active session
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	tokenHash := hashToken(cookie.Value)
@@ -290,6 +291,182 @@ func (h *AuthHandler) SetupVault(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, map[string]string{"message": "vault credential set"})
+}
+
+// ── Vault rotate ──────────────────────────────────────────────────────────────
+
+type vaultRotateRequest struct {
+	Type          string `json:"type"`           // "pin" or "password"
+	OldCredential string `json:"old_credential"` // current credential to verify & decrypt
+	NewCredential string `json:"new_credential"` // replacement credential to re-encrypt with
+}
+
+// RotateVault verifies the old vault credential, re-encrypts every secret note
+// for the user with a fresh key derived from the new credential, then persists
+// the new hash and salt — all inside a single SQLite transaction so nothing is
+// left in a half-migrated state on failure.
+func (h *AuthHandler) RotateVault(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+
+	var req vaultRotateRequest
+	if err := decodeJSON(r, &req); err != nil {
+		jsonError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.Type != "pin" && req.Type != "password" {
+		jsonError(w, http.StatusUnprocessableEntity, "type must be 'pin' or 'password'")
+		return
+	}
+	if req.OldCredential == "" {
+		jsonError(w, http.StatusUnprocessableEntity, "old_credential is required")
+		return
+	}
+	// Validate new credential format
+	if req.Type == "pin" {
+		for _, c := range req.NewCredential {
+			if c < '0' || c > '9' {
+				jsonError(w, http.StatusUnprocessableEntity, "PIN must be numeric")
+				return
+			}
+		}
+		if len(req.NewCredential) < 4 || len(req.NewCredential) > 8 {
+			jsonError(w, http.StatusUnprocessableEntity, "PIN must be 4-8 digits")
+			return
+		}
+	} else {
+		if len(req.NewCredential) < 6 {
+			jsonError(w, http.StatusUnprocessableEntity, "vault password must be at least 6 characters")
+			return
+		}
+	}
+
+	// Load user to verify old credential and obtain current salt
+	var user models.User
+	if err := h.db.Get(&user, `SELECT * FROM users WHERE id=?`, userID); err != nil {
+		jsonError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+	if user.VaultSalt == nil {
+		jsonError(w, http.StatusUnprocessableEntity, "no vault credential configured; use initial setup instead")
+		return
+	}
+
+	validOld := false
+	if user.VaultPinHash != nil && utils.CheckPassword(req.OldCredential, *user.VaultPinHash) {
+		validOld = true
+	}
+	if !validOld && user.VaultPassHash != nil && utils.CheckPassword(req.OldCredential, *user.VaultPassHash) {
+		validOld = true
+	}
+	if !validOld {
+		jsonError(w, http.StatusUnauthorized, "old credential is incorrect")
+		return
+	}
+
+	// Fetch all encrypted secret notes for this user
+	type secretNote struct {
+		ID        string `db:"id"`
+		Body      string `db:"body"`
+		BodyNonce string `db:"body_nonce"`
+	}
+	var notes []secretNote
+	if err := h.db.Select(&notes,
+		`SELECT id, body, body_nonce FROM notes WHERE user_id=? AND is_secret=1`,
+		userID,
+	); err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to fetch secret notes")
+		return
+	}
+
+	// Derive old AES key
+	oldSalt := *user.VaultSalt
+	oldKey, err := utils.DeriveKey(req.OldCredential, oldSalt)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to derive old key")
+		return
+	}
+
+	// Generate new salt and derive new AES key
+	newSalt, err := utils.NewSalt()
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to generate new salt")
+		return
+	}
+	newKey, err := utils.DeriveKey(req.NewCredential, newSalt)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to derive new key")
+		return
+	}
+
+	// Re-encrypt each note body
+	type reencryptedNote struct {
+		id        string
+		newBody   string
+		newNonce  string
+	}
+	reencrypted := make([]reencryptedNote, 0, len(notes))
+	for _, n := range notes {
+		plaintext, err := utils.DecryptBodyWithKey(n.Body, n.BodyNonce, oldKey)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "failed to decrypt note "+n.ID+": "+err.Error())
+			return
+		}
+		newBody, newNonce, err := utils.EncryptBodyWithKey(plaintext, newKey)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "failed to re-encrypt note "+n.ID)
+			return
+		}
+		reencrypted = append(reencrypted, reencryptedNote{id: n.ID, newBody: newBody, newNonce: newNonce})
+	}
+
+	// Hash new credential
+	newCredHash, err := utils.HashPassword(req.NewCredential)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to hash new credential")
+		return
+	}
+
+	// Commit everything atomically
+	tx, err := h.db.Beginx()
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to begin transaction")
+		return
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Update each re-encrypted note
+	for _, rn := range reencrypted {
+		if _, err = tx.Exec(
+			`UPDATE notes SET body=?, body_nonce=?, updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id=?`,
+			rn.newBody, rn.newNonce, rn.id,
+		); err != nil {
+			jsonError(w, http.StatusInternalServerError, "failed to update note during re-encryption")
+			return
+		}
+	}
+
+	// Update user vault credential
+	var userQuery string
+	if req.Type == "pin" {
+		userQuery = `UPDATE users SET vault_pin_hash=?, vault_pass_hash=NULL, vault_salt=?, updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id=?`
+	} else {
+		userQuery = `UPDATE users SET vault_pass_hash=?, vault_pin_hash=NULL, vault_salt=?, updated_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id=?`
+	}
+	if _, err = tx.Exec(userQuery, newCredHash, newSalt, userID); err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to update vault credential")
+		return
+	}
+
+	if err = tx.Commit(); err != nil {
+		jsonError(w, http.StatusInternalServerError, "failed to commit transaction")
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]string{"message": "vault credential rotated"})
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────

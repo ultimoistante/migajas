@@ -41,27 +41,27 @@
 
 {#if open && note}
     <div class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" on:click={close} on:keydown={(e) => e.key === "Escape" && close()} role="dialog" aria-modal="true">
-        <div class="bg-base-100 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4" on:click|stopPropagation on:keydown|stopPropagation>
+        <div class="bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4" on:click|stopPropagation on:keydown|stopPropagation>
             <div class="flex flex-col items-center gap-2 text-center">
                 <div class="w-14 h-14 bg-warning/20 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-yellow-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                 </div>
                 <h2 class="text-lg font-bold">Unlock secret note</h2>
-                <p class="text-sm text-base-content/60">
+                <p class="text-sm text-foreground/80">
                     Enter your vault PIN or vault password to decrypt "<strong>{note.title || "Untitled"}</strong>"
                 </p>
             </div>
 
-            <input type="password" placeholder="Vault PIN or password" class="input input-bordered w-full" bind:value={credential} autocomplete="off" on:keydown={(e) => e.key === "Enter" && unlock()} />
+            <input type="password" placeholder="Vault PIN or password" class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm w-full" bind:value={credential} autocomplete="off" on:keydown={(e) => e.key === "Enter" && unlock()} />
 
             {#if error}
-                <div class="alert alert-error text-sm py-2">{error}</div>
+                <div class="bg-destructive text-destructive-foreground px-4 py-3 rounded-md text-sm py-2">{error}</div>
             {/if}
 
             <div class="flex gap-2">
-                <button class="btn btn-ghost flex-1" on:click={close} type="button">Cancel</button>
+                <button class="h-9 px-3 rounded-md hover:bg-muted inline-flex items-center justify-center flex-1" on:click={close} type="button">Cancel</button>
                 <button class="btn btn-warning flex-1" on:click={unlock} disabled={loading || !credential} type="button">
                     {#if loading}
                         <span class="loading loading-spinner loading-sm" />

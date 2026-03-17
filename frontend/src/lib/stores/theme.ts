@@ -1,37 +1,85 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 
-type Theme = 'light' | 'dark';
+type ThemeMode = 'light' | 'dark' | 'system';
+type ResolvedTheme = 'light' | 'dark';
 
-const stored = browser ? (localStorage.getItem('theme') as Theme | null) : null;
-const prefersDark = browser ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
-const initial: Theme = stored ?? (prefersDark ? 'dark' : 'light');
+function isThemeMode(value: string | null): value is ThemeMode {
+    return value === 'light' || value === 'dark' || value === 'system';
+}
+
+const mediaQuery = browser ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+const stored = browser ? localStorage.getItem('theme') : null;
+const initialMode: ThemeMode = isThemeMode(stored) ? stored : 'system';
+
+function resolveTheme(mode: ThemeMode): ResolvedTheme {
+    if (mode === 'system') {
+        return mediaQuery?.matches ? 'dark' : 'light';
+    }
+    return mode;
+}
+
+const initialResolved: ResolvedTheme = resolveTheme(initialMode);
 
 function createThemeStore() {
-    const { subscribe, set } = writable<Theme>(initial);
+    const { subscribe, set } = writable<ThemeMode>(initialMode);
+    const { subscribe: subscribeResolved, set: setResolved } = writable<ResolvedTheme>(initialResolved);
 
-    function apply(theme: Theme) {
+    function applyResolved(resolved: ResolvedTheme) {
         if (browser) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
+            document.documentElement.classList.toggle('dark', resolved === 'dark');
         }
-        set(theme);
+        setResolved(resolved);
+    }
+
+    function apply(mode: ThemeMode) {
+        if (browser) {
+            localStorage.setItem('theme', mode);
+        }
+        set(mode);
+        applyResolved(resolveTheme(mode));
     }
 
     // Apply initial theme on load
     if (browser) {
-        document.documentElement.setAttribute('data-theme', initial);
+        applyResolved(initialResolved);
+
+        const handleSystemChange = () => {
+            let current: ThemeMode = 'system';
+            subscribe((value) => (current = value))();
+            if (current === 'system') {
+                applyResolved(resolveTheme('system'));
+            }
+        };
+
+        if (mediaQuery?.addEventListener) {
+            mediaQuery.addEventListener('change', handleSystemChange);
+        } else {
+            mediaQuery?.addListener(handleSystemChange);
+        }
     }
 
     return {
         subscribe,
+        resolved: {
+            subscribe: subscribeResolved
+        },
         toggle() {
-            let current: Theme = 'light';
-            subscribe((v) => (current = v))();
-            apply(current === 'light' ? 'dark' : 'light');
+            let currentMode: ThemeMode = 'system';
+            let currentResolved: ResolvedTheme = 'light';
+            subscribe((value) => (currentMode = value))();
+            subscribeResolved((value) => (currentResolved = value))();
+
+            if (currentMode === 'system') {
+                apply(currentResolved === 'dark' ? 'light' : 'dark');
+                return;
+            }
+
+            apply(currentMode === 'light' ? 'dark' : 'light');
         },
         set: apply
     };
 }
 
 export const theme = createThemeStore();
+export const resolvedTheme = theme.resolved;

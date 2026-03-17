@@ -84,6 +84,7 @@ func main() {
 		r.Post("/api/auth/logout", authHandler.Logout)
 		r.Get("/api/auth/me", authHandler.Me)
 		r.Post("/api/auth/vault", authHandler.SetupVault)
+		r.Patch("/api/auth/vault", authHandler.RotateVault)
 
 		// Notes
 		r.Get("/api/notes", notesHandler.List)

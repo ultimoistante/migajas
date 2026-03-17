@@ -48,9 +48,9 @@
     }
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-base-200 p-4">
-    <div class="card bg-base-100 shadow-xl w-full max-w-md">
-        <div class="card-body gap-6">
+<div class="min-h-screen flex items-center justify-center bg-muted p-4">
+    <div class="rounded-lg border border-border shadow-sm bg-card shadow-xl w-full max-w-md">
+        <div class="rounded-lg border border-border shadow-sm-body gap-6">
             <!-- Logo / title -->
             <div class="text-center">
                 <div class="flex items-center justify-center gap-2 mb-2">
@@ -64,55 +64,55 @@
                     <h1 class="text-2xl font-bold">migajas</h1>
                 </div>
                 <h2 class="text-lg font-semibold">First-time Setup</h2>
-                <p class="text-sm text-base-content/60 mt-1">Create the administrator account to get started.</p>
+                <p class="text-sm text-foreground/80 mt-1">Create the administrator account to get started.</p>
             </div>
 
             <form on:submit|preventDefault={initialize} class="flex flex-col gap-4">
                 <!-- Username -->
                 <div class="form-control">
-                    <label class="label pb-1" for="username">
-                        <span class="label-text font-medium">Username</span>
+                    <label class="flex flex-col gap-1.5 pb-1" for="username">
+                        <span class="flex flex-col gap-1.5-text font-medium">Username</span>
                     </label>
-                    <input id="username" type="text" placeholder="admin" class="input input-bordered" bind:value={username} autocomplete="username" required />
+                    <input id="username" type="text" placeholder="admin" class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" bind:value={username} autocomplete="username" required />
                 </div>
 
                 <!-- Email -->
                 <div class="form-control">
-                    <label class="label pb-1" for="email">
-                        <span class="label-text font-medium">Email</span>
+                    <label class="flex flex-col gap-1.5 pb-1" for="email">
+                        <span class="flex flex-col gap-1.5-text font-medium">Email</span>
                     </label>
-                    <input id="email" type="email" placeholder="admin@example.com" class="input input-bordered" bind:value={email} autocomplete="email" required />
+                    <input id="email" type="email" placeholder="admin@example.com" class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" bind:value={email} autocomplete="email" required />
                 </div>
 
                 <!-- Password -->
                 <div class="form-control">
-                    <label class="label pb-1" for="password">
-                        <span class="label-text font-medium">Password</span>
+                    <label class="flex flex-col gap-1.5 pb-1" for="password">
+                        <span class="flex flex-col gap-1.5-text font-medium">Password</span>
                     </label>
-                    <input id="password" type="password" placeholder="At least 8 characters" class="input input-bordered" bind:value={password} autocomplete="new-password" required />
+                    <input id="password" type="password" placeholder="At least 8 characters" class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" bind:value={password} autocomplete="new-password" required />
                 </div>
 
                 <!-- Confirm Password -->
                 <div class="form-control">
-                    <label class="label pb-1" for="confirm-password">
-                        <span class="label-text font-medium">Confirm password</span>
+                    <label class="flex flex-col gap-1.5 pb-1" for="confirm-password">
+                        <span class="flex flex-col gap-1.5-text font-medium">Confirm password</span>
                     </label>
-                    <input id="confirm-password" type="password" placeholder="Repeat password" class="input input-bordered" bind:value={confirmPassword} autocomplete="new-password" required />
+                    <input id="confirm-password" type="password" placeholder="Repeat password" class="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" bind:value={confirmPassword} autocomplete="new-password" required />
                 </div>
 
                 <!-- Self-registration toggle -->
                 <div class="divider my-0">User settings</div>
-                <label class="label cursor-pointer justify-start gap-3 p-0">
+                <label class="flex flex-col gap-1.5 cursor-pointer justify-start gap-3 p-0">
                     <input type="checkbox" class="toggle toggle-primary toggle-sm" bind:checked={allowSelfReg} />
-                    <span class="label-text">Allow users to self-register</span>
+                    <span class="flex flex-col gap-1.5-text">Allow users to self-register</span>
                 </label>
-                <p class="text-xs text-base-content/50 -mt-2">If enabled, anyone can create an account. If disabled, only the admin can manage users.</p>
+                <p class="text-xs text-muted-foreground -mt-2">If enabled, anyone can create an account. If disabled, only the admin can manage users.</p>
 
                 {#if error}
-                    <div class="alert alert-error text-sm">{error}</div>
+                    <div class="bg-destructive text-destructive-foreground px-4 py-3 rounded-md text-sm">{error}</div>
                 {/if}
 
-                <button type="submit" class="btn btn-primary" disabled={loading}>
+                <button type="submit" class="h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md inline-flex items-center justify-center" disabled={loading}>
                     {#if loading}
                         <span class="loading loading-spinner loading-sm" />
                     {/if}

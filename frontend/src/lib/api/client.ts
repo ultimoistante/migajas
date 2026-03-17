@@ -127,7 +127,10 @@ export const auth = {
     me: () => request<User>('GET', '/auth/me'),
 
     setupVault: (type: 'pin' | 'password', credential: string) =>
-        request<{ message: string }>('POST', '/auth/vault', { type, credential })
+        request<{ message: string }>('POST', '/auth/vault', { type, credential }),
+
+    rotateVault: (type: 'pin' | 'password', old_credential: string, new_credential: string) =>
+        request<{ message: string }>('PATCH', '/auth/vault', { type, old_credential, new_credential })
 };
 
 // ── Notes ─────────────────────────────────────────────────────────────────────

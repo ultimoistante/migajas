@@ -43,7 +43,7 @@ func main() {
 	r.Use(chiMiddleware.Timeout(30 * time.Second))
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{cfg.FrontendURL},
+		AllowedOrigins:   cfg.AllowedOrigins(),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Content-Disposition"},
 		ExposedHeaders:   []string{"Content-Disposition"},

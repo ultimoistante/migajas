@@ -107,8 +107,9 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	AccessToken string          `json:"access_token"`
-	User        models.UserPublic `json:"user"`
+	AccessToken  string            `json:"access_token"`
+	User         models.UserPublic `json:"user"`
+	RefreshToken string            `json:"refresh_token,omitempty"` // non-empty only for Capacitor clients
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -139,35 +140,57 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Refresh token
-	if err := h.issueRefreshToken(w, user.ID); err != nil {
+	// Refresh token — also capture raw token for Capacitor clients that cannot use httpOnly cookies
+	rawRefreshToken, err := h.issueRefreshTokenRaw(w, user.ID)
+	if err != nil {
 		jsonError(w, http.StatusInternalServerError, "failed to issue refresh token")
 		return
 	}
 
-	jsonResponse(w, http.StatusOK, loginResponse{
+	resp := loginResponse{
 		AccessToken: accessToken,
 		User:        user.Public(),
-	})
+	}
+	// Only expose the raw token to Capacitor clients (WebView cannot use httpOnly cookies cross-origin)
+	if r.Header.Get("X-Client-Type") == "capacitor" {
+		resp.RefreshToken = rawRefreshToken
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
 }
 
 // ── Refresh ───────────────────────────────────────────────────────────────────
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("refresh_token")
-	if err != nil {
-		// No cookie present — not an error, just no active session
+	var rawToken string
+
+	// Prefer httpOnly cookie (web clients); fall back to request body (Capacitor clients)
+	cookie, cookieErr := r.Cookie("refresh_token")
+	if cookieErr == nil {
+		rawToken = cookie.Value
+	} else {
+		// Try JSON body: { "refresh_token": "..." }
+		var body struct {
+			RefreshToken string `json:"refresh_token"`
+		}
+		// decodeJSON reads up to EOF — safe to ignore error when body is empty
+		_ = decodeJSON(r, &body)
+		rawToken = body.RefreshToken
+	}
+
+	if rawToken == "" {
+		// No token by any means — not an error, just no active session
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	tokenHash := hashToken(cookie.Value)
+	tokenHash := hashToken(rawToken)
 
 	var row struct {
 		ID        string    `db:"id"`
 		UserID    string    `db:"user_id"`
 		ExpiresAt time.Time `db:"expires_at"`
 	}
-	err = h.db.Get(&row,
+	err := h.db.Get(&row,
 		`SELECT id, user_id, expires_at FROM refresh_tokens WHERE token_hash=?`, tokenHash,
 	)
 	if errors.Is(err, sql.ErrNoRows) || time.Now().After(row.ExpiresAt) {
@@ -193,12 +216,17 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusInternalServerError, "failed to generate token")
 		return
 	}
-	if err := h.issueRefreshToken(w, user.ID); err != nil {
+	newRaw, err := h.issueRefreshTokenRaw(w, user.ID)
+	if err != nil {
 		jsonError(w, http.StatusInternalServerError, "failed to issue refresh token")
 		return
 	}
 
-	jsonResponse(w, http.StatusOK, map[string]string{"access_token": accessToken})
+	resp := map[string]string{"access_token": accessToken}
+	if r.Header.Get("X-Client-Type") == "capacitor" {
+		resp["refresh_token"] = newRaw
+	}
+	jsonResponse(w, http.StatusOK, resp)
 }
 
 // ── Logout ────────────────────────────────────────────────────────────────────
@@ -471,15 +499,18 @@ func (h *AuthHandler) RotateVault(w http.ResponseWriter, r *http.Request) {
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-func (h *AuthHandler) issueRefreshToken(w http.ResponseWriter, userID string) error {
+// issueRefreshTokenRaw persists a refresh token, sets the httpOnly cookie,
+// and returns the raw token value so callers can embed it in the response body
+// for clients (e.g. Capacitor) that cannot use cross-origin httpOnly cookies.
+func (h *AuthHandler) issueRefreshTokenRaw(w http.ResponseWriter, userID string) (string, error) {
 	raw, err := utils.RandomID(32)
 	if err != nil {
-		return err
+		return "", err
 	}
 	tokenHash := hashToken(raw)
 	id, err := utils.RandomID(16)
 	if err != nil {
-		return err
+		return "", err
 	}
 	expiresAt := time.Now().Add(time.Duration(h.cfg.RefreshTokenTTL) * 24 * time.Hour)
 	_, err = h.db.Exec(
@@ -487,7 +518,7 @@ func (h *AuthHandler) issueRefreshToken(w http.ResponseWriter, userID string) er
 		id, userID, tokenHash, expiresAt.UTC().Format(time.RFC3339),
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -497,7 +528,7 @@ func (h *AuthHandler) issueRefreshToken(w http.ResponseWriter, userID string) er
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 	})
-	return nil
+	return raw, nil
 }
 
 func hashToken(raw string) string {

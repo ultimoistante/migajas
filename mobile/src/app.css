@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .dashboard-shell {
+        background:
+            radial-gradient(1200px 500px at -20% -10%, rgba(95, 234, 211, 0.12), transparent 55%),
+            radial-gradient(1000px 420px at 110% -20%, rgba(45, 212, 191, 0.1), transparent 60%),
+            linear-gradient(180deg, #f2fbf9 0%, #eef7f8 45%, #e8f3f6 100%);
+    }
+
+    .dark .dashboard-shell {
+        background:
+            radial-gradient(1200px 500px at -20% -10%, rgba(14, 116, 144, 0.22), transparent 55%),
+            radial-gradient(1000px 420px at 110% -20%, rgba(56, 189, 248, 0.14), transparent 60%),
+            linear-gradient(180deg, #0a0f1f 0%, #080d19 45%, #060a14 100%);
+    }
+
+    .glass-nav {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);
+        backdrop-filter: blur(8px);
+    }
+
+    .dark .glass-nav {
+        background: rgba(10, 18, 34, 0.92);
+        border: 1px solid rgba(51, 65, 85, 0.45);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .glass-panel {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(241, 245, 249, 0.95));
+        border: 1px solid rgba(100, 120, 150, 0.22);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px rgba(15, 23, 42, 0.1);
+    }
+
+    .dark .glass-panel {
+        background: linear-gradient(160deg, rgba(15, 23, 42, 0.9), rgba(10, 15, 30, 0.78));
+        border: 1px solid rgba(71, 85, 105, 0.35);
+        box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08), 0 10px 25px rgba(0, 0, 0, 0.28);
+    }
+
+    .section-kicker {
+        color: #5fead3;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+    }
+}
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 215 25% 12%;
+        --card: 0 0% 100%;
+        --card-foreground: 215 25% 12%;
+        --primary: 170 77% 45%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 217.2 91.2% 59.8%;
+        --secondary-foreground: 222.2 47.6% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --muted: 210 40% 94%;
+        --muted-foreground: 215 20% 38%;
+        --accent: 170 77% 45%;
+        --accent-foreground: 0 0% 100%;
+        --border: 214.3 31.8% 82%;
+        --input: 214.3 31.8% 82%;
+        --ring: 170 77% 45%;
+    }
+
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --primary: 170 77% 65%;
+        --primary-foreground: 222.2 47.6% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 170 77% 65%;
+        --accent-foreground: 222.2 47.6% 11.2%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 170 77% 65%;
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* TipTap editor styles */
+.tiptap {
+    @apply outline-none min-h-[200px] px-1;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+    @apply text-muted-foreground pointer-events-none float-left h-0;
+    content: attr(data-placeholder);
+}
+
+.tiptap ul[data-type="taskList"] {
+    @apply list-none pl-0;
+}
+
+.tiptap ul[data-type="taskList"] li {
+    @apply flex items-start gap-2;
+}
+
+.tiptap ul[data-type="taskList"] li>label {
+    @apply flex items-center gap-2 cursor-pointer;
+}
+
+.tiptap table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.5rem 0;
+    table-layout: fixed;
+}
+
+.tiptap table td,
+.tiptap table th {
+    border: 1px solid hsl(var(--border));
+    padding: 0.3rem 0.5rem;
+    min-width: 2rem;
+    vertical-align: top;
+}
+
+.tiptap table th {
+    background: hsl(var(--muted));
+    font-weight: 600;
+}
+
+.tiptap .note-link {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Safe area helpers */
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Prevent overscroll bounce (iOS) */
+html,
+body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}

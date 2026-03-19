@@ -1,22 +1,23 @@
 ![image info](./images/logo_big.svg)
 
-A privacy-focused, multi-user note-taking app with a **Go** backend and **SvelteKit + Tailwind / DaisyUI** frontend.
+A privacy-focused, multi-user note-taking app with a **Go** backend, a **SvelteKit + Tailwind** web frontend, and a **Capacitor + Svelte** mobile app for Android and iOS.
 
 ---
 
 ## Features
 
-- **Rich text editor** — TipTap-powered editor with a top toolbar (headings, bold/italic/strikethrough, links, bullet/ordered/task lists, tables, code blocks, blockquotes, emoji picker, undo/redo) and a table context toolbar
+- **Rich text editor** — TipTap-powered editor with a toolbar (headings, bold/italic/strikethrough, links, bullet/ordered/task lists, tables, code blocks, blockquotes, emoji picker, undo/redo) and a table context toolbar
 - **Secret notes** — body encrypted at rest with **AES-256-GCM**, key derived via **Argon2id** from a vault PIN/password; secret note bodies are *never* transmitted unless explicitly unlocked
 - **File attachments** — attach any file to a note; images are shown as clickable thumbnails with a full-size lightbox and download button; audio files are played back inline with an HTML5 player
 - **Voice memos** — record audio directly from the note editor; saved as an attachment
 - **Note references** — insert links to other notes via the bottom bar picker
 - **Multi-user** — single SQLite database with per-user data isolation
-- **Admin user management** — admin users can create, edit and delete accounts from the `/admin` page (useful when self-registration is disabled)
-- **Auth** — JWT access tokens (15 min) + httpOnly refresh tokens (7 days), auto-rotated
-- **Pinning, search, color labels**
-- **Note cards** — show last-modified timestamp (ISO format), attachment count badge, secret/pinned badges
+- **Admin user management** — admin users can create, edit and delete accounts from the admin page (useful when self-registration is disabled)
+- **Auth** — JWT access tokens (15 min) + httpOnly refresh tokens (7 days), auto-rotated; mobile client uses refresh token stored in device secure storage instead of httpOnly cookie
+- **Pinning, search, color labels, tags**
+- **Note cards** — show last-modified timestamp, attachment count badge, secret/pinned badges
 - **Light / dark theme** with system preference detection
+- **Mobile app** — full feature parity native Android/iOS app built with Capacitor; runtime-configurable server URL; bottom-tab navigation; touch-optimised UI (bottom-sheet modals, scrollable editor toolbar, long-press detection)
 
 ---
 
@@ -32,13 +33,24 @@ migajas/
 │   ├── middleware/          JWT auth middleware
 │   ├── utils/               Crypto helpers (AES-GCM, Argon2id, bcrypt, JWT)
 │   └── main.go              Entry point + router
-└── frontend/                SvelteKit app
+├── frontend/                SvelteKit web app
+│   └── src/
+│       ├── routes/          Pages: / (home), /login, /register, /settings, /admin, /setup
+│       └── lib/
+│           ├── api/         Typed API client with auto-refresh
+│           ├── stores/      Auth, notes, tags, theme Svelte stores
+│           └── components/  RichEditor, NoteCard, NoteModal, UnlockModal
+└── mobile/                  Capacitor + Svelte mobile app (Android / iOS)
     └── src/
-        ├── routes/          Pages: / (home), /login, /register, /settings, /admin, /setup
+        ├── App.svelte        Root shell: init flow, routing, bottom tab bar
+        ├── routes/           HomeRoute, LoginRoute, RegisterRoute, SetupRoute,
+        │                     SettingsRoute, AdminRoute
         └── lib/
-            ├── api/         Typed API client with auto-refresh
-            ├── stores/      Auth, notes, theme Svelte stores
-            └── components/  RichEditor, NoteCard, NoteModal, UnlockModal
+            ├── api/          Typed API client (adds X-Client-Type: capacitor header)
+            ├── serverConfig.ts  Runtime server URL stored in @capacitor/preferences
+            ├── stores/       Auth, notes, tags, theme stores (no SvelteKit deps)
+            └── components/   RichEditor, NoteCard, NoteModal, UnlockModal,
+                              BottomTabBar, ServerSetup
 ```
 
 ---
@@ -80,6 +92,145 @@ cd frontend && npm run dev
 
 ---
 
+## Mobile client (Android / iOS)
+
+The mobile app is a self-contained Capacitor + Svelte SPA located in `mobile/`. It talks directly to a self-hosted Migajas backend whose URL is configured at first launch.
+
+### Mobile prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Node.js | ≥ 18 | |
+| npm | ≥ 9 | |
+| Java (JDK) | 17 or 21 | Android builds |
+| Android Studio | latest stable | Android SDK, emulator |
+| Xcode | ≥ 15 | macOS only, iOS builds |
+| CocoaPods | latest | macOS only, iOS builds — `sudo gem install cocoapods` |
+
+### Backend CORS configuration for mobile
+
+The backend must allow requests from Capacitor's origin. Set the `ADDITIONAL_ALLOWED_ORIGINS` environment variable before starting the backend:
+
+```bash
+# Android (Capacitor uses http scheme by default for Android)
+export ADDITIONAL_ALLOWED_ORIGINS="http://localhost"
+
+# iOS
+export ADDITIONAL_ALLOWED_ORIGINS="capacitor://localhost"
+
+# Both at once
+export ADDITIONAL_ALLOWED_ORIGINS="http://localhost,capacitor://localhost"
+```
+
+### 1. Install dependencies
+
+```bash
+cd mobile
+npm install
+```
+
+### 2. Build the web assets
+
+```bash
+npm run build
+```
+
+This produces a production bundle in `mobile/dist/`.
+
+### 3. Initialise Capacitor (first time only)
+
+```bash
+npx cap init "Migajas" "com.migajas.app" --web-dir dist
+```
+
+### 4. Add platforms (first time only)
+
+```bash
+# Android
+npx cap add android
+
+# iOS (macOS only)
+npx cap add ios
+```
+
+### 5. Sync web assets to native projects
+
+After every `npm run build`, run:
+
+```bash
+npm run cap:sync
+# equivalent to: npx cap sync
+```
+
+This copies `dist/` into the native projects and installs any Capacitor plugin dependencies.
+
+### 6. Run / develop
+
+#### Android
+
+```bash
+# Open in Android Studio (then press ▶ to run on device or emulator)
+npm run cap:android
+
+# Or run directly on a connected device / running emulator
+npm run cap:run:android
+```
+
+#### iOS (macOS only)
+
+```bash
+# Open in Xcode (then press ▶ to run)
+npm run cap:ios
+
+# Or run directly
+npm run cap:run:ios
+```
+
+### Development workflow (live reload)
+
+For iterative development without rebuilding and resyncing on every change:
+
+```bash
+# Terminal 1 – start Vite dev server
+cd mobile && npm run dev
+# Note the dev server URL (e.g. http://192.168.x.x:5173)
+
+# Terminal 2 – build once so native projects are up to date
+cd mobile && npm run build && npm run cap:sync
+```
+
+Then open the native project in Android Studio or Xcode, edit `capacitor.config.ts` temporarily to point the `server.url` at the Vite dev server, and run on device:
+
+```ts
+// capacitor.config.ts — DEV ONLY, revert before final build
+server: {
+    url: 'http://192.168.x.x:5173',
+    cleartext: true
+}
+```
+
+### Production build
+
+```bash
+cd mobile
+npm run build
+npm run cap:sync
+
+# Then open IDE and run a Release build, or:
+cd android && ./gradlew assembleRelease          # unsigned APK
+cd android && ./gradlew bundleRelease            # AAB for Google Play
+```
+
+### First launch — server setup
+
+On first launch the app shows a **Server Setup** screen where the user enters the URL of their Migajas backend (e.g. `https://notes.example.com`). The URL is stored securely in `@capacitor/preferences` and re-used on subsequent launches. It can be changed later from **Settings → Server**.
+
+### Mobile-specific auth flow
+
+When the `X-Client-Type: capacitor` header is present, the backend returns the refresh token in the JSON response body (instead of an httpOnly cookie). The mobile client stores it in `@capacitor/preferences` and sends it as a body field on `/api/auth/refresh` calls — no cookie dependency.
+
+---
+
 ## Environment variables (backend)
 
 | Variable                   | Default                        | Description                               |
@@ -91,7 +242,8 @@ cd frontend && npm run dev
 | `JWT_REFRESH_SECRET`       | *(dev default — change this!)* | Refresh token signing secret              |
 | `ACCESS_TOKEN_TTL_MINUTES` | `15`                           | Access token lifetime                     |
 | `REFRESH_TOKEN_TTL_DAYS`   | `7`                            | Refresh token lifetime                    |
-| `FRONTEND_URL`             | `http://localhost:5173`        | CORS allowed origin                       |
+| `FRONTEND_URL`             | `http://localhost:5173`        | CORS allowed origin (web frontend)        |
+| `ADDITIONAL_ALLOWED_ORIGINS` | *(empty)*                    | Extra CORS origins, comma-separated (e.g. `http://localhost,capacitor://localhost` for the mobile client) |
 | `ALLOW_SELF_REGISTRATION`  | `true`                         | Allow public account creation             |
 
 ---

@@ -83,9 +83,11 @@
             <button class="btn btn-secondary" on:click={testConnection} disabled={testing || !url.trim()}>
                 {testing ? "Testing…" : "Test Connection"}
             </button>
-            <button class="btn btn-primary" on:click={save} disabled={saving || !url.trim()}>
-                {saving ? "Saving…" : "Connect"}
-            </button>
+            {#if testResult === "ok"}
+                <button class="btn btn-primary" on:click={save} disabled={saving}>
+                    {saving ? "Connecting…" : "Connect →"}
+                </button>
+            {/if}
         </div>
     </div>
 </div>
@@ -178,12 +180,13 @@
 
     .actions {
         display: flex;
+        flex-direction: column;
         gap: 10px;
         margin-top: 4px;
     }
 
     .btn {
-        flex: 1;
+        width: 100%;
         padding: 13px 16px;
         border-radius: 10px;
         border: none;

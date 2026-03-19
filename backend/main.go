@@ -43,9 +43,9 @@ func main() {
 	r.Use(chiMiddleware.Timeout(30 * time.Second))
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   cfg.AllowedOrigins(),
+		AllowOriginFunc:  cfg.IsOriginAllowed,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Content-Disposition"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "Content-Disposition", "X-Client-Type"},
 		ExposedHeaders:   []string{"Content-Disposition"},
 		// multipart/form-data content-type is included in Content-Type
 		AllowCredentials: true, // needed for httpOnly refresh-token cookie

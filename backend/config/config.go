@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -34,7 +35,8 @@ func Load() *Config {
 
 // AllowedOrigins returns the full slice of CORS-allowed origins.
 func (c *Config) AllowedOrigins() []string {
-	origins := []string{c.FrontendURL}
+	// Always include Capacitor origins so Android/iOS apps work out of the box.
+	origins := []string{c.FrontendURL, "http://localhost", "capacitor://localhost"}
 	for _, o := range strings.Split(c.AdditionalAllowedOrigins, ",") {
 		o = strings.TrimSpace(o)
 		if o != "" {
@@ -42,6 +44,21 @@ func (c *Config) AllowedOrigins() []string {
 		}
 	}
 	return origins
+}
+
+// IsOriginAllowed is the AllowOriginFunc used by the CORS middleware.
+// It does a case-insensitive exact match against every configured origin,
+// and also accepts any http://localhost:* origin for Capacitor's internal server.
+func (c *Config) IsOriginAllowed(r *http.Request, origin string) bool {
+	origin = strings.ToLower(strings.TrimSpace(origin))
+	for _, o := range c.AllowedOrigins() {
+		if strings.ToLower(o) == origin {
+			return true
+		}
+	}
+	// Accept any localhost origin so Capacitor (which may pick an internal port)
+	// always works regardless of what port the WebView uses.
+	return strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "capacitor://localhost")
 }
 
 func getEnv(key, fallback string) string {

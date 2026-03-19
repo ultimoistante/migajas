@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Semantic color aliases for mobile components — defined outside @layer so Tailwind doesn't strip them */
+:root {
+    --color-bg: hsl(0 0% 100%);
+    --color-surface: hsl(0 0% 100%);
+    --color-border: hsl(214.3 31.8% 82%);
+    --color-muted: hsl(210 40% 94%);
+    --color-accent: hsl(170 77% 45%);
+    --color-text-primary: hsl(215 25% 12%);
+    --color-text-secondary: hsl(215 20% 38%);
+    --color-text-muted: hsl(215 20% 38%);
+}
+
+.dark {
+    --color-bg: hsl(222.2 84% 4.9%);
+    --color-surface: hsl(222.2 47.6% 11.2%);
+    --color-border: hsl(217.2 32.6% 17.5%);
+    --color-muted: hsl(217.2 32.6% 17.5%);
+    --color-accent: hsl(170 77% 65%);
+    --color-text-primary: hsl(210 40% 98%);
+    --color-text-secondary: hsl(215 20.2% 65.1%);
+    --color-text-muted: hsl(215 20.2% 65.1%);
+}
+
 @layer components {
     .dashboard-shell {
         background:
@@ -91,34 +114,46 @@
     }
 
     * {
-        @apply border-border;
+        border-color: hsl(var(--border));
     }
 
     body {
-        @apply bg-background text-foreground;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
     }
 }
 
 /* TipTap editor styles */
 .tiptap {
-    @apply outline-none min-h-[200px] px-1;
+    outline: none;
+    min-height: 200px;
+    padding: 0 0.25rem;
 }
 
 .tiptap p.is-editor-empty:first-child::before {
-    @apply text-muted-foreground pointer-events-none float-left h-0;
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+    float: left;
+    height: 0;
     content: attr(data-placeholder);
 }
 
 .tiptap ul[data-type="taskList"] {
-    @apply list-none pl-0;
+    list-style: none;
+    padding-left: 0;
 }
 
 .tiptap ul[data-type="taskList"] li {
-    @apply flex items-start gap-2;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
 }
 
 .tiptap ul[data-type="taskList"] li>label {
-    @apply flex items-center gap-2 cursor-pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
 }
 
 .tiptap table {

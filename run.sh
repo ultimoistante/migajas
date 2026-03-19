@@ -12,7 +12,7 @@ echo -e "${GREEN}Starting migajas...${NC}"
 echo -e "${YELLOW}[backend]${NC} Building and starting Go API on :8080"
 cd "$ROOT/backend" && CGO_CFLAGS="-Wno-discarded-qualifiers" go build -o migajas-backend .
 if [ ${PIPESTATUS[0]} -ne 0 ]; then echo -e "${RED}Backend build failed!${NC}"; exit 1; fi
-./migajas-backend > /tmp/migajas-backend.log 2>&1 &
+ADDITIONAL_ALLOWED_ORIGINS="http://localhost,capacitor://localhost" ./migajas-backend > /tmp/migajas-backend.log 2>&1 &
 BACKEND_PID=$!
 disown $BACKEND_PID
 

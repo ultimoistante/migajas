@@ -74,12 +74,8 @@
         appReady = true;
 
         // Android back button handler
-        await CapApp.addListener("backButton", ({ canGoBack }) => {
-            if (canGoBack) {
-                window.history.back();
-            } else {
-                CapApp.exitApp();
-            }
+        await CapApp.addListener("backButton", () => {
+            CapApp.exitApp();
         });
     });
 

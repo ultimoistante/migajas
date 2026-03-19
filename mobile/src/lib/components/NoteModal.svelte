@@ -447,17 +447,17 @@
         position: fixed;
         inset: 0;
         z-index: 80;
-        background: rgba(0, 0, 0, 0.55);
+        background: var(--color-bg);
         display: flex;
-        align-items: flex-end;
+        align-items: stretch;
         justify-content: center;
     }
 
     .modal-sheet {
         width: 100%;
-        max-height: 96dvh;
+        height: 100dvh;
         background: var(--color-bg);
-        border-radius: 20px 20px 0 0;
+        border-radius: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -469,11 +469,7 @@
     }
 
     .header-drag-pill {
-        width: 36px;
-        height: 4px;
-        background: var(--color-border);
-        border-radius: 2px;
-        margin: 10px auto 0;
+        display: none;
     }
 
     .header-content {
